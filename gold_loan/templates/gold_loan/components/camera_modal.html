@@ -1,0 +1,27 @@
+<!-- CAMERA MODAL INCLUDE -->
+<div id="cameraModal" class="camera-modal" aria-hidden="true" style="display:none;">
+    <div class="camera-modal-backdrop"></div>
+    <div class="camera-modal-panel" role="dialog" aria-modal="true">
+
+        <h3 style="margin:0 0 8px 0;">Take Photo</h3>
+
+        <video id="cameraVideo" autoplay playsinline style="
+      width:100%; 
+      height:auto; 
+      border-radius:8px;
+      background:#000;
+      transform: scaleX(-1); /* Mirror by default for user experience, logic handles capture */
+    "></video>
+        <!-- Note: CSS transform above only affects visual, not capture unless canvas logic handles it. 
+         My JS update handles the flip logic during capture. -->
+
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+
+        <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
+            <button id="cameraCancelBtn" type="button" class="btn-secondary">Cancel</button>
+            <button id="cameraFlipBtn" type="button" class="btn-secondary">Flip</button>
+            <button id="cameraCaptureBtn" type="button" class="btn-primary">Capture</button>
+        </div>
+
+    </div>
+</div>

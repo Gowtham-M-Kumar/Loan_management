@@ -1,8 +1,10 @@
 {% extends "gold_loan/base.html" %}
 {% load static %}
 
+{% block title %}Loan Entry – Step 4{% endblock %}
+
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry/step4.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
 {% endblock %}
 
 {% block page_header %}
@@ -10,23 +12,317 @@
 {% endblock %}
 
 {% block content %}
-<form class="loan-form" enctype="multipart/form-data">
-    <div class="card">
-        <select>
-            <option>Aadhaar</option>
-            <option>PAN</option>
-            <option>Photo</option>
-            <option>Other</option>
-        </select>
+<form method="post" enctype="multipart/form-data" class="loan-form">
+    {% csrf_token %}
 
-        <input placeholder="Other Document Name">
-        <input type="file" accept="image/*">
-    </div>
+    {% if documents %}
+    {% for doc in documents %}
+    <!-- DOCUMENT ROW (Existing) -->
+    <div class="card document-row" data-doc-index="{{ forloop.counter0 }}"
+        data-has-image="{% if doc.image %}true{% else %}false{% endif %}">
+        <h4>Document</h4>
 
-    <button class="btn-secondary">+ Add Document</button>
+        <div class="grid-3">
+            <select name="document_type[]" required>
+                <option value="">Document Type *</option>
+                <option value="aadhaar" {% if doc.document_type == 'aadhaar' %}selected{% endif %}>Aadhaar</option>
+                <option value="pan" {% if doc.document_type == 'pan' %}selected{% endif %}>PAN</option>
+                <option value="photo" {% if doc.document_type == 'photo' %}selected{% endif %}>Photo</option>
+                <option value="other" {% if doc.document_type == 'other' %}selected{% endif %}>Other</option>
+            </select>
 
-    <div class="actions">
-        <button class="btn-primary">Next →</button>
-    </div>
+            <input type="text" name="other_document_name[]" value="{{ doc.other_name|default:'' }}"
+                placeholder="Other Document Name (if Other)">
+
+            <div class="file-box"
+                style="margin-top: 0; padding: 10px; height: 100%; display:flex; flex-direction:column; justify-content:center;">
+                <span style="font-size: 13px; margin-bottom: 8px; font-weight:500;">Upload / Photo</span>
+
+                <div class="media-buttons" style="gap:6px;">
+                    <button type="button" class="btn-media camera open-camera"
+                        data-target="document_image_{{ forloop.counter0 }}" style="padding:6px 10px; font-size:12px;">
+                        📷 Camera
+                    </button>
+                    <button type="button" class="btn-media btn-upload"
+                        onclick="document.getElementById('document_image_{{ forloop.counter0 }}').click()"
+                        style="padding:6px 10px; font-size:12px;">
+                        📂 Upload
+                    </button>
+                </div>
+
+                <input type="file" name="document_image[]" id="document_image_{{ forloop.counter0 }}" accept="image/*"
+                    capture="environment" onchange="previewDocument(this, '{{ forloop.counter0 }}')"
+                    style="display:none;">
+            </div>
+        </div>
+
+        <!-- Document Preview -->
+        {% if doc.image %}
+        <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}" style="margin-top: 10px;">
+            {% else %}
+            <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}" style="margin-top: 10px; display: none;">
+                {% endif %}
+                <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+                <div class="doc-preview-content">
+                    {% if doc.image %}
+                    <div style="position: relative; display: inline-block;">
+                        <img src="{{ MEDIA_URL }}{{ doc.image }}"
+                            style="max-width: 150px; max-height: 150px; border-radius: 4px; border: 2px solid #e5e7eb;">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- DELETE BUTTON -->
+            <button type="button" class="btn-secondary">
+                ❌ Remove Document
+            </button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <!-- DOCUMENT ROW (Default Empty) -->
+        <div class="card document-row" data-doc-index="0">
+            <h4>Document</h4>
+
+            <div class="grid-3">
+                <select name="document_type[]" required>
+                    <option value="">Document Type *</option>
+                    <option value="aadhaar">Aadhaar</option>
+                    <option value="pan">PAN</option>
+                    <option value="photo">Photo</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <input type="text" name="other_document_name[]" placeholder="Other Document Name (if Other)">
+
+                <div class="file-box"
+                    style="margin-top: 0; padding: 10px; height: 100%; display:flex; flex-direction:column; justify-content:center;">
+                    <span style="font-size: 13px; margin-bottom: 8px; font-weight:500;">Upload / Photo</span>
+
+                    <div class="media-buttons" style="gap:6px;">
+                        <button type="button" class="btn-media camera open-camera" data-target="document_image_0"
+                            style="padding:6px 10px; font-size:12px;">
+                            📷 Camera
+                        </button>
+                        <button type="button" class="btn-media btn-upload"
+                            onclick="document.getElementById('document_image_0').click()"
+                            style="padding:6px 10px; font-size:12px;">
+                            📂 Upload
+                        </button>
+                    </div>
+
+                    <input type="file" name="document_image[]" id="document_image_0" accept="image/*"
+                        capture="environment" onchange="previewDocument(this, '0')" style="display:none;">
+                </div>
+            </div>
+
+            <!-- Document Preview -->
+            <div class="doc-preview" id="doc_preview_0" style="display: none; margin-top: 10px;">
+                <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+                <div class="doc-preview-content"></div>
+            </div>
+
+            <!-- DELETE BUTTON -->
+            <button type="button" class="btn-secondary">
+                ❌ Remove Document
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- ADD DOCUMENT -->
+        <button type="button" class="btn-secondary add-row">
+            ➕ Add Another Document
+        </button>
+
+        <!-- NOTE -->
+        <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">
+            ⚠️ At least one document is required to proceed.
+        </p>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <a href="{% url 'gold_loan:loan_entry_step3' %}" class="btn-secondary">
+                ← Back
+            </a>
+            <button type="submit" class="btn-primary">
+                Next →
+            </button>
+        </div>
 </form>
+
+<script>
+    let docIndex = parseInt("{{ documents|length|default:1 }}");
+
+    // Master file storage for documents
+    const docFileStores = {};
+
+    // Initialize stores for existing rows
+    for (let i = 0; i < docIndex; i++) {
+        docFileStores[i] = new Map();
+    }
+
+    function previewDocument(input, index) {
+        if (!docFileStores[index]) docFileStores[index] = new Map();
+
+        const currentFiles = Array.from(input.files);
+        currentFiles.forEach(f => {
+            const id = `${f.name}-${f.size}-${f.lastModified}`;
+            docFileStores[index].set(id, f);
+        });
+
+        // Sync back
+        const dt = new DataTransfer();
+        docFileStores[index].forEach(f => dt.items.add(f));
+        input.files = dt.files;
+
+        renderDocPreviews(index);
+    }
+
+    function renderDocPreviews(index) {
+        const previewContainer = document.getElementById(`doc_preview_${index}`);
+        const previewContent = previewContainer.querySelector('.doc-preview-content');
+        const files = Array.from(docFileStores[index].values());
+
+        previewContent.innerHTML = '';
+        if (files.length > 0) {
+            previewContainer.style.display = 'block';
+            files.forEach(file => {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'position: relative; display: inline-block; margin-right: 10px; margin-bottom: 10px;';
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'max-width: 150px; max-height: 150px; border-radius: 4px; border: 2px solid #e5e7eb;';
+                        wrapper.prepend(img);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const info = document.createElement('div');
+                    info.style.cssText = 'padding: 10px; background: #f3f4f6; border-radius: 4px; border: 2px solid #e5e7eb; min-width: 150px;';
+                    info.innerHTML = `<p style="margin: 0; font-weight: 600; font-size: 12px;">📄 ${file.name}</p>`;
+                    wrapper.prepend(info);
+                }
+
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '×';
+                delBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 1;';
+                delBtn.type = 'button';
+                delBtn.onclick = () => removeDocFile(index, file);
+                wrapper.appendChild(delBtn);
+
+                previewContent.appendChild(wrapper);
+            });
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    function removeDocFile(index, fileToRemove) {
+        const id = `${fileToRemove.name}-${fileToRemove.size}-${fileToRemove.lastModified}`;
+        docFileStores[index].delete(id);
+
+        const input = document.getElementById(`document_image_${index}`);
+        const dt = new DataTransfer();
+        docFileStores[index].forEach(f => dt.items.add(f));
+        input.files = dt.files;
+
+        renderDocPreviews(index);
+    }
+
+    // Add another document
+    document.querySelector(".add-row").onclick = function () {
+        const lastDoc = document.querySelectorAll('.document-row');
+        const container = lastDoc[lastDoc.length - 1];
+        if (!container) return;
+
+        const clone = container.cloneNode(true);
+        clone.setAttribute('data-doc-index', docIndex);
+
+        clone.querySelectorAll("input, select").forEach(el => {
+            if (el.type === "file") {
+                el.value = "";
+                el.id = `document_image_${docIndex}`;
+                el.setAttribute('onchange', `previewDocument(this, ${docIndex})`);
+
+                const camBtn = el.parentNode.querySelector('.open-camera');
+                if (camBtn) {
+                    camBtn.setAttribute('data-target', `document_image_${docIndex}`);
+                    camBtn.removeAttribute("data-bound");
+                }
+
+                const upBtn = el.parentNode.querySelector('.btn-upload');
+                if (upBtn) {
+                    upBtn.setAttribute('onclick', `document.getElementById('document_image_${docIndex}').click()`);
+                }
+            } else if (el.tagName === "SELECT") {
+                el.selectedIndex = 0;
+            } else {
+                el.value = "";
+            }
+        });
+
+        const previewContainer = clone.querySelector('.doc-preview');
+        previewContainer.id = `doc_preview_${docIndex}`;
+        previewContainer.style.display = 'none';
+        previewContainer.querySelector('.doc-preview-content').innerHTML = '';
+
+        clone.querySelector(".btn-secondary").onclick = function () {
+            const allDocs = document.querySelectorAll(".document-row");
+            if (allDocs.length > 1) {
+                clone.remove();
+                delete docFileStores[clone.getAttribute('data-doc-index')];
+            } else {
+                alert("At least one document is required");
+            }
+        };
+
+        this.parentNode.insertBefore(clone, this);
+        docIndex++;
+    };
+
+    // Remove first document
+    document.querySelector(".document-row .btn-secondary").onclick = function () {
+        const allDocs = document.querySelectorAll(".document-row");
+        if (allDocs.length > 1) {
+            this.closest(".document-row").remove();
+            delete docFileStores[this.closest(".document-row").getAttribute('data-doc-index')];
+        } else {
+            alert("At least one document is required");
+        }
+    };
+
+    // Form submission validation
+    document.querySelector("form").onsubmit = function (e) {
+        const rows = document.querySelectorAll(".document-row");
+        let isValid = true;
+
+        if (rows.length === 0) {
+            alert("At least one document is required.");
+            return false;
+        }
+
+        rows.forEach((row, idx) => {
+            const index = row.getAttribute('data-doc-index');
+            const fileInput = document.getElementById(`document_image_${index}`);
+            const docType = row.querySelector("select").value;
+            const hasExistingImage = row.getAttribute('data-has-image') === 'true';
+
+            if (!docType) {
+                alert(`Document ${idx + 1}: Please select a document type.`);
+                isValid = false;
+            } else if (!hasExistingImage && (!fileInput || fileInput.files.length === 0)) {
+                alert(`Document ${idx + 1}: Please upload or take a photo.`);
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+    };
+</script>
 {% endblock %}

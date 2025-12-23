@@ -1,0 +1,367 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Edit Loan – {{ loan.loan_number }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_view.css' %}">
+<style>
+    .edit-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-bottom: 50px;
+    }
+
+    .edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e5e7eb;
+    }
+
+    .edit-titles p {
+        color: #6b7280;
+        margin: 4px 0 0;
+    }
+
+    .forms-grid {
+        display: block;
+        /* Using block to stack elements vertically */
+    }
+
+    .section-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 24px;
+    }
+
+    .section-card h3 {
+        margin: 0 0 20px;
+        font-size: 16px;
+        color: #111827;
+        font-weight: 600;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .field-group {
+        margin-bottom: 16px;
+    }
+
+    .field-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #4b5563;
+        margin-bottom: 6px;
+    }
+
+    .field-group input,
+    .field-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.15s;
+    }
+
+    .field-group input:focus,
+    .field-group textarea:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 14px;
+    }
+
+    .summary-row.total {
+        border-bottom: none;
+        padding-top: 16px;
+        font-weight: 600;
+        color: #111827;
+        font-size: 16px;
+    }
+
+    .btn-save {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        width: 100%;
+        margin-top: 16px;
+    }
+
+    .btn-save:hover {
+        background: #059669;
+    }
+
+    .expenses-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .expenses-table th,
+    .expenses-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .expenses-table th {
+        font-weight: 500;
+        color: #6b7280;
+        background: #f9fafb;
+    }
+
+    .btn-delete {
+        color: #ef4444;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 16px;
+    }
+
+    .add-expense-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed #e5e7eb;
+    }
+
+    .btn-add {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+        .forms-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+
+    {% if success %}
+    <div
+        style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
+        <span>✅ {{ success }}</span>
+        <a href="{% url 'gold_loan:loan_view' loan.id %}"
+            style="font-weight: 600; color: #065f46; text-decoration: none;">View Loan →</a>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div
+        style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Header (Read-Only) -->
+    <div class="edit-header">
+        <div class="edit-titles">
+            <h2 style="margin:0;">Editing Loan: {{ loan.loan_number }}</h2>
+            <p>Lot: {{ loan.lot_number }} | Customer: {{ customer.name }}</p>
+        </div>
+        <div>
+            <span class="status-badge status-{{ loan.status }}">{{ loan.get_status_display }}</span>
+        </div>
+    </div>
+
+    <div class="forms-grid">
+        <!-- Main Form Section -->
+        <div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_loan">
+
+                <!-- Bank / Pledge Details (Editable) -->
+                <div class="section-card">
+                    <h3>🏦 Bank / Pledge Details</h3>
+
+                    <div class="field-group">
+                        <label>Bank Name</label>
+                        <input type="text" name="bank_name" value="{{ loan.bank_name|default:'' }}"
+                            placeholder="e.g. Canara Bank">
+                    </div>
+
+                    <div class="field-group">
+                        <label>Bank Address</label>
+                        <textarea name="bank_address" rows="2"
+                            placeholder="Bank Branch & Address">{{ loan.bank_address|default:'' }}</textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Pledge Receipt Number</label>
+                        <input type="text" name="pledge_receipt_no" value="{{ loan.pledge_receipt_no|default:'' }}">
+                    </div>
+                </div>
+
+                <!-- Loan Configuration (Editable) -->
+                <div class="section-card">
+                    <h3>⚙️ Loan Configuration</h3>
+
+                    <div class="field-group">
+                        <label>Interest Rate (%)</label>
+                        <input type="number" step="0.01" name="interest_rate" value="{{ loan.interest_rate }}" required>
+                        <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Created with: {{ loan.interest_rate
+                            }}%</p>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Price per Gram (₹)</label>
+                        <input type="number" step="0.01" name="price_per_gram" id="pricePerGram"
+                            value="{{ loan.price_per_gram }}" required onchange="updateTotal()">
+                    </div>
+
+                    <div class="field-group">
+                        <label>Total Loan Amount (Auto-calc)</label>
+                        <input type="text" id="totalAmountDisplay" value="₹ {{ loan.total_amount }}" readonly
+                            style="background: #f3f4f6; color: #6b7280;">
+                    </div>
+
+                    <p style="font-size: 12px; color: #6b7280; line-height: 1.4;">
+                        ⚠️ Changing rate affects <strong>future</strong> interest calculations only.
+                        Changing price recalculates the loan principal.
+                    </p>
+
+                    <button type="submit" class="btn-save">💾 Save Changes</button>
+                    <a href="{% url 'gold_loan:loan_view' loan.id %}"
+                        style="display: block; text-align: center; margin-top: 12px; color: #6b7280; text-decoration: none; font-size: 14px;">Cancel
+                        & Go Back</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Supplementary Sections -->
+        <div>
+            <!-- Gold Summary (Read-Only) -->
+            <div class="section-card" style="background: #fafafa;">
+                <h3>⚖️ Gold Summary (Read-Only)</h3>
+                <div class="summary-row">
+                    <span>Total Actual Weight</span>
+                    <strong>{{ total_actual_grams }}g</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Total Approved Weight</span>
+                    <strong id="approvedGrams">{{ total_approved_grams }}g</strong>
+                </div>
+                <div style="margin-top: 12px; font-size: 13px; color: #6b7280;">
+                    To modify items, please close this loan and create a new one, or contact admin.
+                </div>
+            </div>
+
+            <!-- Internal Amount Tracker (Profit Helper) -->
+            <div class="section-card">
+                <h3>📊 Internal Amount Tracker</h3>
+                <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">
+                    Track separate pledge amounts or company charges here.
+                </p>
+
+                <table class="expenses-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Medium</th>
+                            <th>Notes</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.date|date:"d M Y" }}</td>
+                            <td>₹ {{ expense.amount }}</td>
+                            <td>{{ expense.medium|default:"-" }}</td>
+                            <td>{{ expense.notes|default:"-" }}</td>
+                            <td style="text-align: right;">
+                                <form method="post" onsubmit="return confirm('Remove this entry?');" style="margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_expense">
+                                    <input type="hidden" name="expense_id" value="{{ expense.id }}">
+                                    <button type="submit" class="btn-delete" title="Remove">✕</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #9ca3af; padding: 20px;">No charges
+                                tracked yet</td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if expenses %}
+                        <tr style="border-top: 2px solid #e5e7eb; background: #f9fafb;">
+                            <td style="font-weight: 600;">Total</td>
+                            <td style="font-weight: 600;">₹ {{ total_expenses }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <form method="post" class="add-expense-row">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_expense">
+                    <input type="date" name="date" required value="{% now 'Y-m-d' %}"
+                        style="width: 130px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+
+                    <input type="number" step="0.01" name="amount" placeholder="Amount" required
+                        style="width: 100px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+
+                    <input type="text" name="medium" placeholder="Medium" required
+                        style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+
+                    <input type="text" name="notes" placeholder="Notes (Optional)"
+                        style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+
+                    <button type="submit" class="btn-add">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateTotal() {
+        const price = parseFloat(document.getElementById('pricePerGram').value) || 0;
+        const grams = parseFloat(document.getElementById('approvedGrams').innerText) || parseFloat("{{ total_approved_grams|default:0 }}");
+
+        const total = price * grams;
+        document.getElementById('totalAmountDisplay').value = '₹ ' + total.toFixed(2);
+    }
+</script>
+{% endblock %}

@@ -33,23 +33,24 @@
         ✅ This loan is fully paid and eligible for closure.
     </div>
 
-    <form method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn-close"
-            onclick="return confirm('Are you sure you want to permanently close this loan? This action cannot be undone.')">
+    <div style="margin-top: 20px;">
+        <a href="{% url 'gold_loan:loan_close_otp' loan.id %}" class="btn-close"
+            style="text-decoration: none; display: inline-block;">
             Confirm & Close Loan
-        </button>
-    </form>
+        </a>
+    </div>
     {% else %}
     <div class="warning-box" style="margin-top: 20px;">
-        ⚠️ Loan cannot be closed. Outstanding amount exists.
+        ⚠️ Outstanding amount exists. Please complete payment before closing.
     </div>
 
-    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay">
+    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay"
+        style="text-decoration: none; display: inline-block;">
         Go to Payment Page
     </a>
     {% endif %}
 
-    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel">Cancel</a>
+    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel"
+        style="text-decoration: none; display: inline-block; margin-top: 15px;">Cancel</a>
 </div>
 {% endblock %}

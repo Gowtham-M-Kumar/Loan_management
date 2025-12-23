@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt - {{ payment.id }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'gold_loan/css/receipts.css' %}">
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">🖨 Print Receipt</button>
+
+    <div class="receipt-header">
+        <h1 class="company-name">PUNNAGAI GOLD LOAN</h1>
+        <div class="receipt-title">Payment Receipt</div>
+
+        <div class="meta-info">
+            <div>
+                <strong>Receipt No:</strong> PAY-{{ payment.id|stringformat:"06d" }}
+            </div>
+            <div>
+                <strong>Date:</strong> {{ payment.created_at|date:"d-M-Y h:i A" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="receipt-row-alt">
+        <span class="receipt-label-alt">Customer Name:</span>
+        <span class="receipt-value">{{ customer.name }}</span>
+    </div>
+    <div class="receipt-row-alt">
+        <span class="receipt-label-alt">Loan Number:</span>
+        <span class="receipt-value">{{ loan.loan_number }}</span>
+    </div>
+    <div class="receipt-row-alt">
+        <span class="receipt-label-alt">Payment Date:</span>
+        <span class="receipt-value">{{ payment.payment_date|date:"d-M-Y" }}</span>
+    </div>
+    <div class="receipt-row-alt">
+        <span class="receipt-label-alt">Payment Mode:</span>
+        <span class="receipt-value">{{ payment.get_payment_mode_display }}</span>
+    </div>
+    {% if payment.reference_no %}
+    <div class="receipt-row-alt">
+        <span class="receipt-label-alt">Reference No:</span>
+        <span class="receipt-value">{{ payment.reference_no }}</span>
+    </div>
+    {% endif %}
+
+    <div class="amount-box">
+        <div class="amount-received">Amount Received</div>
+        <div class="amount-large">₹{{ payment.total_amount }}</div>
+    </div>
+
+    <div class="breakdown">
+        <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Payment
+            Allocation</div>
+        <div class="breakdown-row">
+            <span>Interest Component:</span>
+            <span>₹{{ payment.interest_component }}</span>
+        </div>
+        <div class="breakdown-row">
+            <span>Principal Component:</span>
+            <span>₹{{ payment.principal_component }}</span>
+        </div>
+    </div>
+
+    {% if payment.remarks %}
+    <div style="margin-top: 15px; font-style: italic; color: #666; font-size: 14px;">
+        <strong>Remarks:</strong> {{ payment.remarks }}
+    </div>
+    {% endif %}
+
+    <div class="receipt-footer">
+        <div style="font-size: 12px; color: #666;">
+            <p>This is a system generated receipt.</p>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div>Authorized Signatory</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

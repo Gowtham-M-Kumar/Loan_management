@@ -1,0 +1,218 @@
+## 🔑 CORE PHILOSOPHY (CONFIRMED)
+
+> **Every payment always clears PENDING INTEREST first.
+> Only the remaining amount (if any) reduces PRINCIPAL.**
+
+This rule is **non-negotiable** and applies to:
+
+* First payment
+* Any partial payment
+* Final closure payment
+
+---
+
+# 🧩 PART 1 — LOAN CREATION INTEREST LOGIC (10-DAY RULE)
+
+### 🟢 At the moment a loan is created:
+
+1. **Calculate 10 days interest immediately**
+
+   ```
+   initial_interest = (principal × rate × 10) / (365 × 100)
+   ```
+
+2. Save it as:
+
+   ```
+   pending_interest = initial_interest
+   ```
+
+3. Set interest tracking dates:
+
+   * `loan_start_datetime = now()`
+   * `interest_lock_until = loan_start_datetime + 10 days`
+   * `last_interest_calculated_at = loan_start_datetime`
+
+---
+
+### 🔒 During the next 10 days (Grace Period):
+
+* ❌ No interest is added
+* ❌ last_interest_calculated_at is NOT updated
+* Payments can still be made, but they will:
+
+  * Pay the **already-added 10-day interest first**
+  * Then reduce principal
+
+---
+
+### ⏱️ On Day 10 at **12:01 AM**:
+
+* Interest accrual **unlocks**
+* Daily interest starts accumulating from that moment onward
+
+---
+
+# 🧩 PART 2 — INTEREST ACCRUAL LOGIC (AFTER DAY 10)
+
+Interest is **NOT calculated continuously**.
+It is calculated **only when needed**, using this trigger-based approach:
+
+### 📌 Interest is updated when:
+
+* Opening **Loan View Page**
+* Adding a **Payment**
+* Closing a **Loan**
+
+---
+
+### 🔢 Interest Calculation Formula (CONFIRMED)
+
+```
+days = (today - last_interest_calculated_at).days
+
+interest = (current_principal × rate × days) / (365 × 100)
+```
+
+This interest is added to:
+
+```
+pending_interest += interest
+```
+
+Then:
+
+```
+last_interest_calculated_at = today
+```
+
+---
+
+# 🧩 PART 3 — PAYMENT LOGIC (YOUR “WATERFALL” SYSTEM)
+
+This is implemented **every single time a payment is made**.
+
+---
+
+## 🟦 STEP A — Bring Interest Up-to-Date
+
+Before using the payment amount:
+
+1. Check if:
+
+   ```
+   now >= interest_lock_until
+   ```
+2. If yes:
+
+   * Calculate interest from `last_interest_calculated_at → today`
+   * Add to `pending_interest`
+3. If no:
+
+   * Skip interest calculation (still in grace period)
+
+---
+
+## 🟦 STEP B — Split the Payment (Waterfall)
+
+Let:
+
+* Payment Amount = `X`
+* Pending Interest = `I`
+* Outstanding Principal = `P`
+
+### 1️⃣ Pay Interest First
+
+```
+interest_component = min(I, X)
+remaining_amount = X - interest_component
+```
+
+### 2️⃣ Pay Principal Next (if any)
+
+```
+principal_component = min(P, remaining_amount)
+```
+
+---
+
+## 🟦 STEP C — Update Balances
+
+### Pending Interest
+
+```
+pending_interest -= interest_component
+```
+
+### Principal (DYNAMIC — NOT STORED)
+
+You **do not store current principal**.
+
+Instead:
+
+```
+current_principal =
+    original_loan_amount
+    − SUM(all principal_component values from payments)
+```
+
+This is **exactly correct design** ✔️
+(no data corruption, no sync issues)
+
+---
+
+# 🧩 PART 4 — PAYMENT RECORD (AUDIT-SAFE)
+
+Each payment record must store:
+
+| Field               | Meaning                    |
+| ------------------- | -------------------------- |
+| total_amount        | Amount paid by customer    |
+| interest_component  | How much cleared interest  |
+| principal_component | How much reduced principal |
+| payment_date        | Date/time                  |
+| mode                | Cash / UPI / Bank          |
+| reference           | Optional                   |
+| remarks             | Optional                   |
+
+This allows:
+
+* Full audit
+* Easy receipt generation
+* Easy loan closure calculation
+
+---
+
+# 🧩 PART 5 — FINAL LOAN CLOSURE LOGIC
+
+A loan can be closed **only if**:
+
+```
+pending_interest == 0
+AND
+current_principal == 0
+```
+
+Final closure payment will:
+
+* Clear remaining interest
+* Clear remaining principal
+* Set loan status = CLOSED
+
+---
+
+# 🧩 PART 6 — SYSTEM STATES (IMPORTANT FOR UI)
+
+Each loan will naturally fall into one of these states:
+
+| State             | Meaning                  |
+| ----------------- | ------------------------ |
+| Grace Period      | Initial 10 days          |
+| Interest Accruing | After Day 10             |
+| Active            | Payments ongoing         |
+| Ready to Close    | Principal + interest = 0 |
+| Closed            | Loan completed           |
+
+
+
+

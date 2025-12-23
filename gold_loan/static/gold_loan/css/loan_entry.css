@@ -81,13 +81,51 @@ textarea {
     border: 2px dashed #d1d5db;
     border-radius: 8px;
     text-align: center;
-    cursor: pointer;
+    cursor: default; /* Changed from pointer to avoid confusing behavior with buttons inside */
     font-size: 14px;
     color: #374151;
 }
 
 .file-box input {
     display: none;
+}
+
+.media-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-media {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #374151;
+}
+
+.btn-media:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-media.camera {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.btn-media.camera:hover {
+    background: #dbeafe;
 }
 
 /* ==============================

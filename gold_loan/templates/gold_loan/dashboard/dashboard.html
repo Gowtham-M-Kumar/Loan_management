@@ -4,7 +4,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/dashboard/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/dashboard.css' %}?v=1">
 {% endblock %}
 
 {% block page_header %}
@@ -12,9 +12,84 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-cards">
-    <div class="card">Total Loans</div>
-    <div class="card">Active Loans</div>
-    <div class="card">Closed Loans</div>
+<!-- Section 1: Quick Actions -->
+<!-- <div class="quick-actions">
+    <h4 class="section-title">Quick Actions</h4>
+    <div class="action-buttons">
+        <a href="{% url 'gold_loan:loan_entry' %}" class="btn btn-primary">➕ New Loan</a>
+        <a href="#" class="btn btn-secondary">📄 View Loans</a>
+        <a href="#" class="btn btn-secondary">💰 Add Payment</a>
+        <a href="#" class="btn btn-secondary">❌ Close Loan</a>
+    </div>
+</div> -->
+
+<!-- Section 2: Loan List -->
+<div class="loan-list">
+    <h4 class="section-title">Loan List</h4>
+
+    <div class="filter-bar">
+        <span>Status:</span>
+        <a href="?status=active&sort={{ current_sort }}"
+            class="filter-link {% if current_status == 'active' %}active{% endif %}">Active</a>
+        <a href="?status=closed&sort={{ current_sort }}"
+            class="filter-link {% if current_status == 'closed' %}active{% endif %}">Closed</a>
+        <a href="?status=extended&sort={{ current_sort }}"
+            class="filter-link {% if current_status == 'extended' %}active{% endif %}">Extended</a>
+        <a href="?status=all&sort={{ current_sort }}"
+            class="filter-link {% if current_status == 'all' %}active{% endif %}">All</a>
+    </div>
+
+    <table class="loan-table">
+        <thead>
+            <tr>
+                <th>Loan Number</th>
+                <th>Customer ID</th>
+                <th>
+                    <a href="?sort={% if current_sort == 'name_asc' %}name_desc{% else %}name_asc{% endif %}&status={{ current_status }}"
+                        title="Sort by Name">
+                        Customer Name
+                        {% if current_sort == 'name_asc' %}▲{% elif current_sort == 'name_desc' %}▼{% endif %}
+                    </a>
+                </th>
+                <th>Loan Amount</th>
+                <th>Status</th>
+                <th>
+                    <a href="?sort={% if current_sort == 'date_asc' %}date_desc{% else %}date_asc{% endif %}&status={{ current_status }}"
+                        title="Sort by Date">
+                        Created Date
+                        {% if current_sort == 'date_asc' %}▲{% elif current_sort == 'date_desc' %}▼{% endif %}
+                    </a>
+                </th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.loan_number }}</td>
+                <td>{{ loan.customer.customer_id }}</td>
+                <td>{{ loan.customer.name }}</td>
+                <td>₹{{ loan.total_amount }}</td>
+                <td>
+                    {% if loan.extensions.all %}
+                    <span class="status-badge-extended">Extended</span>
+                    {% elif loan.status == 'active' %}
+                    <span class="status-badge-active">Active</span>
+                    {% else %}
+                    <span class="status-badge-closed">Closed</span>
+                    {% endif %}
+                </td>
+                <td>{{ loan.created_at|date:"d M Y" }}</td>
+                <td><a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-sm">View</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align:center; padding: 20px; color: #6b7280;">
+                    No loans found. Start by creating a new loan.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

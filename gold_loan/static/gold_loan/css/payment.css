@@ -1,0 +1,49 @@
+/* Payment Specific Styles */
+.header-actions {
+    margin-bottom: 25px;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    /* Slightly rounder */
+    font-size: 14px;
+    background-color: #f9fafb;
+    /* Light bg */
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    background-color: #fff;
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* Specific button variant for payment */
+.btn-payment {
+    background: #059669;
+    color: white;
+    border: 1px solid #047857;
+}
+
+.btn-payment:hover {
+    background: #047857;
+}

@@ -1,0 +1,50 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Verify Extension OTP - {{ loan.loan_number }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_close.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="close-container">
+    <div class="close-header">
+        <h2 style="margin: 0; color: #111;">Verify OTP for Extension</h2>
+        <div style="color: #666; margin-top: 5px;">Loan: {{ loan.loan_number }}</div>
+    </div>
+
+    <div style="margin: 20px 0; color: #4b5563;">
+        An OTP has been sent to the customer's mobile to authorize this extension.
+        <br>
+        <strong>(Mock OTP: 123456)</strong>
+    </div>
+
+    {% if error %}
+    <div class="warning-box"
+        style="margin-bottom: 20px; background-color: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px;">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+            <input type="text" name="otp" placeholder="Enter 6-digit OTP" required
+                style="padding: 10px; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; letter-spacing: 2px; text-align: center;">
+        </div>
+
+        <button type="submit" class="btn-primary"
+            style="width: 100%; padding: 12px; font-size: 16px; background-color: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">
+            Verify & Start Extension
+        </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{% url 'gold_loan:loan_view' loan.id %}"
+            style="color: #6b7280; text-decoration: none; font-size: 14px;">
+            ← Back to Loan View
+        </a>
+    </div>
+</div>
+{% endblock %}

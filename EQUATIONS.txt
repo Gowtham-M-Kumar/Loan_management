@@ -1,0 +1,91 @@
+==================================================
+PUNNAGAI GOLD LOAN - FINANCIAL LOGIC & EQUATIONS
+==================================================
+
+1. LOAN CREATION (INITIALIZATION)
+--------------------------------------------------
+At the moment of loan creation, the system calculates 10 days of interest upfront.
+
+    Initial Interest = (Principal * Interest Rate * 10) / (365 * 100)
+    
+    Pending Interest (Start) = Initial Interest
+    Interest Lock Period     = 10 Days (from creation)
+
+* During the first 10 days, NO additional daily interest is accumulated.
+
+
+2. DAILY INTEREST CALCULATION
+--------------------------------------------------
+Running interest is calculated strictly using Simple Interest formula on the current outstanding balance, but only for days AFTER the 10-day grace period.
+
+    Daily Interest = (Outstanding Principal * Interest Rate * Days Elapsed) / (365 * 100)
+
+    Where:
+    - Outstanding Principal = Total Loan Amount - Total Principal Paid
+    - Days Elapsed          = Days since last calculation (ignoring grace period overlap)
+
+* If checking status during Grace Period: Daily Interest = 0.
+
+
+3. YEARLY CAPITALIZATION (COMPOUNDING)
+--------------------------------------------------
+The system applies capitalization exactly every 365 days from the loan start date.
+
+    Capitalization Date = Loan Start Date + (N * 365 Days)
+
+    If (Current Date >= Capitalization Date) AND (Pending Interest > 0):
+        
+        New Total Loan Amount = Old Total Loan Amount + Pending Interest
+        New Pending Interest  = 0
+    
+* This permanently increases the base loan amount.
+* Future daily interest is calculated on this NEW, higher Total Loan Amount (minus payments).
+
+
+4. PAYMENT ALLOCATION (WATERFALL)
+--------------------------------------------------
+Payments are strictly allocated to clear Interest first, then Principal.
+
+    Let Payment Amount = P_amt
+
+    1. Interest Component (I_comp):
+       I_comp = MIN(Pending Interest, P_amt)
+
+    2. Principal Component (P_comp):
+       Remaining = P_amt - I_comp
+       P_comp    = MIN(Outstanding Principal, Remaining)
+
+    3. Balance Updates:
+       Pending Interest      = Pending Interest - I_comp
+       Outstanding Principal = Outstanding Principal - P_comp (Dynamic Calculation)
+
+
+5. OUTSTANDING PRINCIPAL FORMULA
+--------------------------------------------------
+The core balance used for all interest calculations.
+
+    Outstanding Principal = (Total Loan Amount) - SUM(All Principal Components Paid)
+
+* Note: "Total Loan Amount" increases if Capitalization occurs.
+
+
+6. CLOSURE LOGIC
+--------------------------------------------------
+A loan can be closed when the Total Due is zero.
+
+    Total Due = Outstanding Principal + Pending Interest
+
+    If Total Due <= 0:
+        Loan Status -> "Closed"
+
+
+7. SIMULATION LOGIC 
+--------------------------------------------------
+Simulates future state without modifying database.
+
+    Simulation Date = Current Date + Simulated Days
+
+    Iterates from Now -> Simulation Date:
+    1. Checks for 365-day Capitalization boundaries.
+    2. Capitalizes interest if boundary crossed.
+    3. Accrues daily interest for days between events.

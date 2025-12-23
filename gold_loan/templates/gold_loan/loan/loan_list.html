@@ -1,0 +1,87 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/dashboard.css' %}?v=1">
+{% endblock %}
+
+{% block page_header %}
+<h3>{{ title }}</h3>
+{% endblock %}
+
+{% block content %}
+<div class="loan-list">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h4 class="section-title" style="margin: 0;">{{ title }} History</h4>
+        <div style="font-size: 14px; color: #6b7280;">Total: {{ loans.count }} Loans</div>
+    </div>
+
+    <table class="loan-table">
+        <thead>
+            <tr>
+                <th>Loan Details</th>
+                <th>Customer</th>
+                <th>Loan Amount</th>
+                <th>
+                    {% if title == "Closed Loans" %}Closed Date{% else %}Created Date{% endif %}
+                </th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>
+                    <div style="font-weight: 600; color: #111;">{{ loan.loan_number }}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Lot: {{ loan.lot_number }}</div>
+                    {% if loan.parent_loan %}
+                    <a href="{% url 'gold_loan:loan_view' loan.parent_loan.id %}" class="parent-link">
+                        🔗 Ext. from {{ loan.parent_loan.loan_number }}
+                    </a>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="font-weight: 500;">{{ loan.customer.name }}</div>
+                    <div style="font-size: 12px; color: #6b7280;">ID: {{ loan.customer.customer_id }}</div>
+                </td>
+                <td>
+                    <div style="font-weight: 600;">₹{{ loan.total_amount }}</div>
+                    <div style="font-size: 11px; color: #6b7280;">{{ loan.interest_rate }}% Interest</div>
+                </td>
+                <td>
+                    {% if loan.status == 'closed' %}
+                    <div style="font-weight: 500;">{{ loan.closed_at|date:"d M Y" }}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Started {{ loan.created_at|date:"d M Y" }}</div>
+                    {% else %}
+                    <div style="font-weight: 500;">{{ loan.created_at|date:"d M Y" }}</div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if loan.status == 'closed' %}
+                    <span class="status-badge-closed">CLOSED</span>
+                    {% elif loan.parent_loan %}
+                    <span class="status-badge-extended">EXTENDED</span>
+                    {% else %}
+                    <span class="status-badge"
+                        style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">ACTIVE</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-sm">View Details</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 40px; color: #6b7280;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
+                    No {{ title|lower }} found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

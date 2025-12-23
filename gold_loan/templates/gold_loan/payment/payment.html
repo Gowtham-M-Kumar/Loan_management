@@ -1,16 +1,315 @@
 {% extends "gold_loan/base.html" %}
 {% load static %}
 
-{% block title %}Payment{% endblock %}
+{% block title %}Payment - {{ loan.loan_number }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/payment/payment.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/payment.css' %}">
 {% endblock %}
 
 {% block page_header %}
-<h3>Loan Payment</h3>
+<div class="view-container">
+    <div class="header-actions"
+        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0;">
+        <div>
+            <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn btn-secondary"
+                style="font-size: 13px; padding: 6px 12px;">← Back to Loan View</a>
+        </div>
+        <a href="{% url 'gold_loan:payment_summary_receipt' loan.id %}" target="_blank" class="btn btn-secondary"
+            style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff;">
+            🧾 Full Summary Receipt
+        </a>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
-<p>Payment processing UI will be added here.</p>
+<div class="view-container">
+
+    {% if error %}
+    <div class="alert-error">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
+
+        <!-- LEFT COLUMN -->
+        <div>
+
+            <!-- 1. Loan Summary -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h4 class="section-title">📄 Loan Summary</h4>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="info-item">
+                            <div class="info-label">Customer Name</div>
+                            <div class="info-value">{{ loan.customer.name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">{{ loan.get_status_display }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Loan Amount</div>
+                            <div class="info-value">₹{{ loan.total_amount }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Interest Rate</div>
+                            <div class="info-value">{{ loan.interest_rate }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Payment Summary -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h4 class="section-title">📊 Payment Summary</h4>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="info-item">
+                            <div class="info-label">Total Paid</div>
+                            <div class="info-value-large">₹{{ total_paid }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Last Payment Date</div>
+                            <div class="info-value">
+                                {% if payments.first %}
+                                {{ payments.first.payment_date }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label" style="color: #d97706;">Pending Interest (Till Today)</div>
+                            <div class="info-value-warn">₹{{ loan.pending_interest }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Outstanding Principal</div>
+                            <div class="info-value-danger">₹{{ outstanding_principal|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interest Simulation -->
+            <div class="section-card" style="border: 1px solid #e5e7eb; background: #f9fafb;">
+                <div class="section-header" style="background: #f3f4f6;">
+                    <h4 class="section-title">🧮 Interest Simulation</h4>
+                </div>
+                <div class="section-body">
+                    <div style="flex: 1; min-width: 200px; margin-bottom: 15px;">
+                        <label class="info-label" style="display: block; margin-bottom: 8px;">Simulate Days from
+                            Creation</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="simulate-days" class="form-control"
+                                style="flex: 1; background: white;" placeholder="e.g. 30">
+                            <button onclick="runSimulation()" class="btn btn-primary" id="sim-btn"
+                                style="white-space: nowrap;">Simulate</button>
+                        </div>
+                    </div>
+
+                    <div id="sim-results"
+                        style="display: none; background: white; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                        <div class="info-grid" style="grid-template-columns: repeat(2, 1fr);">
+                            <div class="info-item">
+                                <div class="info-label">Simulated Date</div>
+                                <div class="info-value" id="res-date">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Int. Days (After 10d)</div>
+                                <div class="info-value" id="res-int-days">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Sim. Interest</div>
+                                <div class="info-value-warn" id="res-interest">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Caps Applied</div>
+                                <div class="info-value" id="res-caps">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Total Payable</div>
+                                <div class="info-value-danger" id="res-total">-</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 11px; color: #64748b; margin-top: 10px; font-style: italic;">
+                            * Simulation based on {{ loan.interest_rate }}% rate. Actual interest depends on payment
+                            dates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Payment History (Moved here for better layout, or maybe below form) -->
+            <!-- Requirement says: 1. Summary, 2. Payment Summary, 3. Add Form, 4. History -->
+            <!-- But putting Form on the right side looks better on desktop. -->
+            <!-- However, user requested "Page Sections (IN THIS ORDER)". I should respect that structure primarily, but side-by-side is layout. -->
+            <!-- Let's follow the order strictly vertically if I am unsure, but the designs usually have form on side. -->
+            <!-- Let's stick to the prompt structure. -->
+        </div>
+
+        <!-- RIGHT COLUMN (Form) -->
+        <div>
+            <!-- 3. Add Payment Form -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h4 class="section-title">💰 Add Payment</h4>
+                </div>
+                <div class="section-body">
+                    {% if loan.status == 'active' %}
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label class="form-label">Payment Date</label>
+                            <input type="date" name="payment_date" class="form-control" value="{{ today_date }}"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Amount (₹)</label>
+                            <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="1"
+                                step="0.01" value="{{ total_due|floatformat:2 }}" required>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                Max: ₹{{ total_due|floatformat:2 }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Payment Mode</label>
+                            <select name="payment_mode" class="form-control" required>
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="bank">Bank Transfer</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Reference No (Optional)</label>
+                            <input type="text" name="reference_no" class="form-control" placeholder="e.g. UPI Ref ID">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Remarks (Optional)</label>
+                            <textarea name="remarks" class="form-control" rows="2"
+                                placeholder="Any notes..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-payment"
+                            style="width: 100%; padding: 12px; font-size: 16px; margin-top: 10px;">
+                            ✅ Record Payment
+                        </button>
+                    </form>
+                    {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 20px;">
+                        This loan is {{ loan.get_status_display }} and cannot accept payments.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 4. Payment History (Full Width) -->
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">📜 Payment History</h4>
+        </div>
+        <div class="section-body" style="padding: 0;">
+            <table class="view-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Interest Comp.</th>
+                        <th>Principal Comp.</th>
+                        <th>Mode</th>
+                        <th>Ref / Remarks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>{{ p.payment_date }}</td>
+                        <td style="font-weight: 600;">₹{{ p.total_amount }}</td>
+                        <td style="color: #d97706;">₹{{ p.interest_component }}</td>
+                        <td style="color: #059669;">₹{{ p.principal_component }}</td>
+                        <td>{{ p.get_payment_mode_display }}</td>
+                        <td>
+                            {% if p.reference_no %}
+                            <div style="font-size: 12px; font-weight: 500;">Ref: {{ p.reference_no }}</div>
+                            {% endif %}
+                            {% if p.remarks %}
+                            <div style="font-size: 12px; color: #6b7280;">{{ p.remarks }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'gold_loan:payment_receipt' p.id %}" target="_blank"
+                                class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;"
+                                title="Print Receipt">
+                                🧾 Print
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 20px; color: #6b7280;">No payments recorded
+                            yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function runSimulation() {
+        const daysInput = document.getElementById('simulate-days');
+        const days = daysInput.value;
+        const btn = document.getElementById('sim-btn');
+        const resultsDiv = document.getElementById('sim-results');
+
+        if (!days || days < 0) {
+            alert("Please enter a valid number of days.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Calcul...";
+
+        try {
+            const response = await fetch(`{% url 'gold_loan:simulate_interest' loan.id %}?days=${days}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                resultsDiv.style.display = 'block';
+                document.getElementById('res-date').innerText = data.simulated_date;
+                document.getElementById('res-int-days').innerText = Math.max(0, data.days - 10) + " Days";
+                document.getElementById('res-interest').innerText = "₹" + data.simulated_interest.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                document.getElementById('res-caps').innerText = data.capitalizations_count;
+                document.getElementById('res-total').innerText = "₹" + data.total_payable.toLocaleString(undefined, { minimumFractionDigits: 2 });
+            } else {
+                alert("Error: " + (data.error || "Failed to simulate"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred during simulation.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Simulate";
+        }
+    }
+</script>
 {% endblock %}

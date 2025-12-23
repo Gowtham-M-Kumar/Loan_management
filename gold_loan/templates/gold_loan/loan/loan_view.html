@@ -1,0 +1,394 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Loan View - {{ loan.loan_number }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_view.css' %}?v=1.1">
+{% endblock %}
+
+{% block page_header %}
+<div class="view-container">
+    <div class="loan-header" style="margin-bottom: 0;">
+        <div class="loan-title">
+            <h3>{{ loan.loan_number }}</h3>
+            <span class="loan-subtitle">Lot: {{ loan.lot_number }}</span>
+
+            {% if loan.status == 'closed' %}
+            <span class="status-badge status-closed">CLOSED</span>
+            <div style="font-size: 12px; color: #991b1b; margin-top: 5px;">
+                Closed on: {{ loan.closed_at|date:"d M Y, h:i A" }}
+            </div>
+            {% else %}
+            <span class="status-badge status-{{ loan.status|lower }}">{{ loan.get_status_display }}</span>
+            {% endif %}
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'gold_loan:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+
+            {% if loan.status == 'active' %}
+            <a href="{% url 'gold_loan:loan_edit' loan.id %}" class="btn btn-primary"
+                style="background-color: #f59e0b; border-color: #d97706;">✏️ Edit</a>
+            <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn btn-secondary">💰 Add Payment</a>
+            <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn btn-danger">❌ Close Loan</a>
+            {% elif loan.status == 'closed' %}
+            <a href="{% url 'gold_loan:loan_closure_receipt' loan.id %}" target="_blank" class="btn btn-secondary"
+                style="border-color: #059669; color: #059669;">
+                🧾 Closure Receipt
+            </a>
+            <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn btn-secondary">
+                🔄 Extend Loan
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="view-container">
+
+    <!-- Section 2: Customer Details -->
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">👤 Customer Details</h4>
+        </div>
+        <div class="section-body">
+            <div style="display: flex; gap: 20px; align-items: start;">
+                <!-- Photo -->
+                <div style="flex-shrink: 0;">
+                    {% if customer.photo %}
+                    <img src="{{ customer.photo.url }}" class="customer-photo-thumb" alt="Customer Photo">
+                    {% else %}
+                    <div class="customer-photo-thumb"
+                        style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 24px;">
+                        👤</div>
+                    {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="info-grid" style="flex-grow: 1;">
+                    <div class="info-item">
+                        <div class="info-label">Customer ID</div>
+                        <div class="info-value">{{ customer.customer_id }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Full Name</div>
+                        <div class="info-value">{{ customer.name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Mobile Number</div>
+                        <div class="info-value">
+                            {{ customer.mobile_primary }}
+                            {% if customer.mobile_secondary %}
+                            / {{ customer.mobile_secondary }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Aadhaar Number</div>
+                        <div class="info-value">{{ customer.aadhaar_number }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Profession</div>
+                        <div class="info-value">{{ customer.profession }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Nominee Name</div>
+                        <div class="info-value">{{ customer.nominee_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Nominee Mobile</div>
+                        <div class="info-value">{{ customer.nominee_mobile }}</div>
+                    </div>
+                    <div class="info-item" style="grid-column: span 2;">
+                        <div class="info-label">Address</div>
+                        <div class="info-value">{{ customer.address }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2.5: Bank / Pledge Details -->
+    {% if loan.bank_name or loan.pledge_receipt_no %}
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">🏦 Bank / Pledge Details</h4>
+        </div>
+        <div class="section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Bank Name</div>
+                    <div class="info-value">{{ loan.bank_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pledge Receipt No</div>
+                    <div class="info-value">{{ loan.pledge_receipt_no }}</div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <div class="info-label">Bank Address</div>
+                    <div class="info-value">{{ loan.bank_address|default:"-" }}</div>
+                </div>
+                {% if loan.pledge_notes %}
+                <div class="info-item" style="grid-column: span 2;">
+                    <div class="info-label">Notes</div>
+                    <div class="info-value">{{ loan.pledge_notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="section-card" style="border: 1px dashed #d1d5db; background: #fdfbf7;">
+        <div class="section-body" style="padding: 15px; text-align: center; color: #b45309;">
+            <strong>ℹ️ Pledge details not yet added.</strong>
+            {% if loan.status == 'active' %}
+            <a href="{% url 'gold_loan:loan_edit' loan.id %}"
+                style="color: #d97706; text-decoration: underline; margin-left: 5px;">Add them now</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section 3: Loan Details -->
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">📄 Loan Details</h4>
+            <a href="{% url 'gold_loan:loan_receipt' loan.id %}" target="_blank"
+                style="font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 500;">
+                🧾 View Receipt
+            </a>
+        </div>
+        <div class="section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Loan Created Date</div>
+                    <div class="info-value">{{ loan.created_at|date:"d M Y, h:i A" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Interest Rate</div>
+                    <div class="info-value">{{ loan.interest_rate }}%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Price Per Gram</div>
+                    <div class="info-value">₹{{ loan.price_per_gram }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Approved Grams</div>
+                    <div class="info-value">{{ loan.approved_grams }}g</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Cur. Loan Amount (After Cap.)</div>
+                    <div class="info-value-large">₹{{ loan.total_amount }}</div>
+                </div>
+                <!-- Added Outstanding Principal -->
+                <div class="info-item">
+                    <div class="info-label">Outstanding Principal</div>
+                    <div class="info-value-danger">₹{{ outstanding_principal|floatformat:2 }}</div>
+                </div>
+                <!-- Added Pending Interest -->
+                <div class="info-item">
+                    <div class="info-label" style="color: #d97706;">Pending Interest (Till Today)</div>
+                    <div class="info-value-warn">₹{{ loan.pending_interest }}</div>
+                </div>
+                <!-- Added Next Capitalization Date -->
+                <div class="info-item">
+                    <div class="info-label">Next Interest Capitalization On</div>
+                    <div class="info-value">
+                        {% if next_cap_date %}
+                        {{ next_cap_date|date:"d M Y" }}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3.5: Interest Simulation -->
+    <div class="section-card" style="border: 1px solid #e5e7eb; background: #f9fafb;">
+        <div class="section-header" style="background: #f3f4f6;">
+            <h4 class="section-title">🧮 Interest Simulation</h4>
+        </div>
+        <div class="section-body">
+            <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="info-label" style="display: block; margin-bottom: 8px;">Simulate Days from
+                        Creation</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="simulate-days" class="btn btn-secondary"
+                            style="flex: 1; text-align: left; cursor: text; padding: 10px;"
+                            placeholder="Enter days (e.g. 30)">
+                        <button onclick="runSimulation()" class="btn btn-primary" id="sim-btn">Simulate</button>
+                    </div>
+                </div>
+
+                <div id="sim-results"
+                    style="display: none; flex: 2; min-width: 300px; background: white; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Simulated Date</div>
+                            <div class="info-value" id="res-date">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Interest Days (After 10d Grace)</div>
+                            <div class="info-value" id="res-int-days">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Simulated Interest</div>
+                            <div class="info-value-warn" id="res-interest">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Capitalizations Applied</div>
+                            <div class="info-value" id="res-caps">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Outstanding</div>
+                            <div class="info-value-danger" id="res-total">-</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; margin-top: 10px; font-style: italic;">
+                        * This is a simulation based on {{ loan.interest_rate }}% rate. Actual interest depends on
+                        payment dates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Gold Items -->
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">💍 Gold Items</h4>
+        </div>
+        <div class="section-body" style="padding: 0;">
+            <table class="view-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Item Name</th>
+                        <th>Carat</th>
+                        <th>Gross Wt</th>
+                        <th>Net Wt</th>
+                        <th>Description</th>
+                        <th style="width: 200px;">Images</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.get_carat_display }}</td>
+                        <td>{{ item.gross_weight }}g</td>
+                        <td>{{ item.approved_net_weight }}g</td>
+                        <td>{{ item.description|default:"-" }}</td>
+                        <td>
+                            <div class="image-gallery">
+                                {% for img in item.images.all %}
+                                <a href="{{ img.image.url }}" target="_blank">
+                                    <img src="{{ img.image.url }}" class="gallery-img" alt="Item Image">
+                                </a>
+                                {% empty %}
+                                <span style="color: #999; font-size: 12px;">No images</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 5: Documents -->
+    <div class="section-card">
+        <div class="section-header">
+            <h4 class="section-title">📂 Documents</h4>
+        </div>
+        <div class="section-body" style="padding: 0;">
+            <table class="view-table">
+                <thead>
+                    <tr>
+                        <th>Document Type</th>
+                        <th>Details</th>
+                        <th>Preview</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.get_document_type_display }}</td>
+                        <td>{{ doc.other_name|default:"-" }}</td>
+                        <td>
+                            {% if doc.image %}
+                            <img src="{{ doc.image.url }}"
+                                style="height: 40px; border-radius: 4px; border: 1px solid #ddd;" alt="Doc">
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.image %}
+                            <a href="{{ doc.image.url }}" target="_blank" class="btn btn-secondary"
+                                style="padding: 4px 8px; font-size: 12px;">View</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding: 20px; color: #6b7280;">No documents attached
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function runSimulation() {
+        const daysInput = document.getElementById('simulate-days');
+        const days = daysInput.value;
+        const btn = document.getElementById('sim-btn');
+        const resultsDiv = document.getElementById('sim-results');
+
+        if (!days || days < 0) {
+            alert("Please enter a valid number of days.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Calculating...";
+
+        try {
+            const response = await fetch(`{% url 'gold_loan:simulate_interest' loan.id %}?days=${days}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                resultsDiv.style.display = 'block';
+                document.getElementById('res-date').innerText = data.simulated_date;
+                document.getElementById('res-int-days').innerText = Math.max(0, data.days - 10) + " Days";
+                document.getElementById('res-interest').innerText = "₹" + data.simulated_interest.toLocaleString(undefined, { minimumFractionDigits: 2 });
+                document.getElementById('res-caps').innerText = data.capitalizations_count;
+                document.getElementById('res-total').innerText = "₹" + data.total_payable.toLocaleString(undefined, { minimumFractionDigits: 2 });
+            } else {
+                alert("Error: " + (data.error || "Failed to simulate"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred during simulation.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Simulate";
+        }
+    }
+</script>
+{% endblock %}

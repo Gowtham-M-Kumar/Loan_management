@@ -1,0 +1,62 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Customers{% endblock %}
+
+{% block page_header %}
+<h3>Customers</h3>
+{% endblock %}
+
+{% block content %}
+<!-- Search Bar -->
+<div class="search-section" style="margin-bottom: 25px;">
+    <form method="GET" action="." style="display: flex; gap: 10px; max-width: 500px;">
+        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by name, ID, or mobile..."
+            style="flex-grow: 1; padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+        <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">🔍 Search</button>
+        {% if search_query %}
+        <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
+            style="padding: 10px 15px; display: flex; align-items: center; text-decoration: none;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="customer-grid"
+    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+    {% for customer in customers %}
+    <a href="{% url 'gold_loan:customer_detail' customer.id %}" class="customer-card"
+        style="display: block; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit; transition: box-shadow 0.2s;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="profile-thumb"
+                style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #f3f4f6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                {% if customer.photo %}
+                <img src="{{ customer.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                👤
+                {% endif %}
+            </div>
+            <div>
+                <h4 style="margin: 0; font-size: 16px; color: #111827;">{{ customer.name }}</h4>
+                <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">{{ customer.customer_id }}</div>
+            </div>
+        </div>
+        <div
+            style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; font-size: 14px;">
+            <div style="color: #6b7280;">📞 {{ customer.mobile_primary }}</div>
+            <div style="font-weight: 500; color: #2563eb;">{{ customer.total_loans }} Loans</div>
+        </div>
+    </a>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 40px;">
+        No customers found.
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .customer-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-color: #d1d5db;
+    }
+</style>
+{% endblock %}

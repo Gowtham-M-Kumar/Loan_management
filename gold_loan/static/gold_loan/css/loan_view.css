@@ -1,0 +1,48 @@
+.loan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.loan-title h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 5px;
+}
+
+.loan-subtitle {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Image Gallery */
+.image-gallery {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.gallery-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.gallery-img:hover {
+    transform: scale(1.05);
+    border-color: #2563eb;
+}
+
+.customer-photo-thumb {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+}

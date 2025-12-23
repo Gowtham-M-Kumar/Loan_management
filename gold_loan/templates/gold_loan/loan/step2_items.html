@@ -2,8 +2,9 @@
 {% load static %}
 
 {% block title %}Loan Entry – Step 2{% endblock %}
+
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry/step2.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
 {% endblock %}
 
 {% block page_header %}
@@ -11,35 +12,388 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data" class="loan-form">
+{% if error %}
+<p style="color:red; font-weight:600; margin-bottom: 15px;">{{ error }}</p>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="loan-form" id="itemsForm">
     {% csrf_token %}
 
-    <div class="card">
-        <h4>Gold Item</h4>
+    <div id="items-container">
+        {% if items %}
+        {% for item in items %}
+        <!-- GOLD ITEM (Existing) -->
+        <div class="card gold-item" data-index="{{ forloop.counter0 }}"
+            data-img-count="{{ item.images|length|default:0 }}">
+            <h4>Gold Item</h4>
 
-        <div class="grid-3">
-            <input placeholder="Item Name *" required>
-            <select>
-                <option>Carat</option>
-                <option>18</option><option>20</option><option>22</option><option>24</option>
-            </select>
-            <input type="number" step="0.001" placeholder="Gross Weight *">
+            <div class="grid-3">
+                <input type="text" name="item_name[]" value="{{ item.item_name }}" placeholder="Item Name *" required>
+
+                <select name="carat[]" required>
+                    <option value="">Carat *</option>
+                    <option value="18" {% if item.carat == 18 %}selected{% endif %}>18K</option>
+                    <option value="20" {% if item.carat == 20 %}selected{% endif %}>20K</option>
+                    <option value="22" {% if item.carat == 22 %}selected{% endif %}>22K</option>
+                    <option value="24" {% if item.carat == 24 %}selected{% endif %}>24K</option>
+
+                </select>
+
+                <input type="number" step="0.001" name="gross_weight[]" value="{{ item.gross_weight }}"
+                    placeholder="Gross Weight (g) *" required>
+            </div>
+
+            <div class="grid-2">
+                <input type="number" step="0.001" name="approved_net_weight[]" value="{{ item.approved_net_weight }}"
+                    placeholder="Approved Net Weight (g) *" required>
+                <input type="text" value="{{ forloop.counter }}" readonly class="item-count-display"
+                    style="text-align: center; font-weight: bold;">
+            </div>
+
+            <textarea name="description[]" placeholder="Description (optional)">{{ item.description }}</textarea>
+
+            <div class="file-box">
+                <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Images (Minimum 2 required)</div>
+
+                <div class="media-buttons">
+                    <button type="button" class="btn-media camera open-camera"
+                        data-target="item_images_{{ forloop.counter0 }}">
+                        <span>📷</span> Take Photo
+                    </button>
+                    <button type="button" class="btn-media btn-upload"
+                        onclick="document.getElementById('item_images_{{ forloop.counter0 }}').click()">
+                        <span>📂</span> Upload Files
+                    </button>
+                </div>
+
+                <input type="file" name="item_images_{{ forloop.counter0 }}[]" id="item_images_{{ forloop.counter0 }}"
+                    accept="image/*" capture="environment" multiple
+                    onchange="previewItemImages(this, '{{ forloop.counter0 }}')" style="display:none;">
+            </div>
+
+            <!-- Image Preview Container -->
+            {% if item.images %}
+            <div class="image-preview-container" id="preview_{{ forloop.counter0 }}" style="margin-top: 10px;">
+                {% else %}
+                <div class="image-preview-container" id="preview_{{ forloop.counter0 }}"
+                    style="margin-top: 10px; display: none;">
+                    {% endif %}
+                    <p style="font-weight: 600; margin-bottom: 5px;">Uploaded Images:</p>
+                    <div class="image-preview-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                        {% for img_path in item.images %}
+                        <div class="existing-image-wrapper" style="position: relative; width: 100px; height: 100px;">
+                            <img src="{{ MEDIA_URL }}{{ img_path }}"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;">
+                            <!-- We don't have an easy way to 'remove' existing temp images via back/next yet without more complex JS, 
+                                 but showing them fulfills the 'details' requirement. -->
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button type="button" class="btn-secondary remove-item">
+                    ❌ Remove Item
+                </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <!-- GOLD ITEM (Default Empty) -->
+            <div class="card gold-item" data-index="0">
+                <h4>Gold Item</h4>
+
+                <div class="grid-3">
+                    <input type="text" name="item_name[]" placeholder="Item Name *" required>
+
+                    <select name="carat[]" required>
+                        <option value="">Carat *</option>
+                        <option value="18">18K</option>
+                        <option value="20">20K</option>
+                        <option value="22">22K</option>
+                        <option value="24">24K</option>
+                    </select>
+
+                    <input type="number" step="0.001" name="gross_weight[]" placeholder="Gross Weight (g) *" required>
+                </div>
+
+                <div class="grid-2">
+                    <input type="number" step="0.001" name="approved_net_weight[]"
+                        placeholder="Approved Net Weight (g) *" required>
+                    <input type="text" value="1" readonly class="item-count-display"
+                        style="text-align: center; font-weight: bold;">
+                </div>
+
+                <textarea name="description[]" placeholder="Description (optional)"></textarea>
+
+                <div class="file-box">
+                    <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Images (Minimum 2 required)</div>
+
+                    <div class="media-buttons">
+                        <button type="button" class="btn-media camera open-camera" data-target="item_images_0">
+                            <span>📷</span> Take Photo
+                        </button>
+                        <button type="button" class="btn-media btn-upload"
+                            onclick="document.getElementById('item_images_0').click()">
+                            <span>📂</span> Upload Files
+                        </button>
+                    </div>
+
+                    <input type="file" name="item_images_0[]" id="item_images_0" accept="image/*" capture="environment"
+                        multiple onchange="previewItemImages(this, '0')" style="display:none;">
+                </div>
+
+                <!-- Image Preview Container -->
+                <div class="image-preview-container" id="preview_0" style="display: none; margin-top: 10px;">
+                    <p style="font-weight: 600; margin-bottom: 5px;">Uploaded Images:</p>
+                    <div class="image-preview-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-secondary remove-item">
+                    ❌ Remove Item
+                </button>
+            </div>
+            {% endif %}
         </div>
 
-        <input type="number" step="0.001" placeholder="Approved Net Weight *">
+        <button type="button" class="btn-secondary" id="addItem">
+            ➕ Add Another Item
+        </button>
 
-        <textarea placeholder="Description"></textarea>
-
-        <label class="file-box">
-            Upload Item Images (min 2)
-            <input type="file" multiple accept="image/*">
-        </label>
-    </div>
-
-    <button class="btn-secondary">+ Add Another Item</button>
-
-    <div class="actions">
-        <button class="btn-primary">Next →</button>
-    </div>
+        <div class="actions">
+            <a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn-secondary">← Back</a>
+            <button type="submit" class="btn-primary">Next →</button>
+        </div>
 </form>
+
+<script>
+    // Master file storage to handle appending across multiple file picks or camera shots
+    const itemFileStores = {};
+    let itemIndex = parseInt("{{ items|length|default:1 }}");
+
+    // Initialize stores for existing rows
+    for (let i = 0; i < itemIndex; i++) {
+        itemFileStores[i] = new Map();
+    }
+
+    function previewItemImages(input, index) {
+        if (!itemFileStores[index]) itemFileStores[index] = new Map();
+
+        const currentFiles = Array.from(input.files);
+
+        // Add files to our master store for this item
+        currentFiles.forEach(f => {
+            // Unique ID based on name, size and timestamp to prevent duplicates but allow multiple similar-looking files
+            const id = `${f.name}-${f.size}-${f.lastModified}`;
+            itemFileStores[index].set(id, f);
+        });
+
+        // Sync back to input.files so the form submits EVERY file in the Map
+        const dt = new DataTransfer();
+        itemFileStores[index].forEach(f => dt.items.add(f));
+        input.files = dt.files;
+
+        renderItemPreviews(index);
+    }
+
+    function renderItemPreviews(index) {
+        const previewContainer = document.getElementById(`preview_${index}`);
+        const grid = previewContainer.querySelector('.image-preview-grid');
+        const files = Array.from(itemFileStores[index].values());
+
+        // Clear previous previews
+        grid.innerHTML = '';
+
+        if (files.length > 0) {
+            previewContainer.style.display = 'block';
+            files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.style.cssText = 'position: relative; width: 100px; height: 100px;';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;';
+
+                    const delBtn = document.createElement('button');
+                    delBtn.innerHTML = '×';
+                    delBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; line-height: 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2);';
+                    delBtn.type = 'button';
+                    delBtn.onclick = (event) => {
+                        event.stopPropagation();
+                        removeIndividualFile(index, file);
+                    };
+
+                    imgWrapper.appendChild(img);
+                    imgWrapper.appendChild(delBtn);
+                    grid.appendChild(imgWrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    function removeIndividualFile(index, fileToRemove) {
+        const id = `${fileToRemove.name}-${fileToRemove.size}-${fileToRemove.lastModified}`;
+        if (itemFileStores[index]) {
+            itemFileStores[index].delete(id);
+
+            // Sync back to input
+            const input = document.getElementById(`item_images_${index}`);
+            if (input) {
+                const dt = new DataTransfer();
+                itemFileStores[index].forEach(f => dt.items.add(f));
+                input.files = dt.files;
+            }
+            renderItemPreviews(index);
+        }
+    }
+
+    function updateItemNumbers() {
+        const items = document.querySelectorAll(".gold-item");
+        items.forEach((item, index) => {
+            const countInput = item.querySelector(".item-count-display");
+            if (countInput) {
+                countInput.value = index + 1;
+            }
+        });
+    }
+
+    // Validation for weights
+    function validateWeights(card) {
+        const grossInput = card.querySelector("input[name='gross_weight[]']");
+        const netInput = card.querySelector("input[name='approved_net_weight[]']");
+        const gross = parseFloat(grossInput.value) || 0;
+        const net = parseFloat(netInput.value) || 0;
+
+        let errorMsg = card.querySelector(".weight-error");
+        if (errorMsg) errorMsg.remove();
+
+        if (net > gross) {
+            const err = document.createElement("div");
+            err.className = "weight-error";
+            err.style.cssText = "color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;";
+            err.innerText = "❌ Approved Net Weight cannot exceed Gross Weight.";
+            netInput.parentNode.appendChild(err);
+            netInput.style.borderColor = "#dc2626";
+            return false;
+        } else {
+            netInput.style.borderColor = "#e5e7eb";
+            return true;
+        }
+    }
+
+    // Attach validation listeners
+    document.getElementById("items-container").addEventListener("input", function (e) {
+        if (e.target.name === "gross_weight[]" || e.target.name === "approved_net_weight[]") {
+            const card = e.target.closest(".gold-item");
+            validateWeights(card);
+        }
+    });
+
+    // Form Submission Validation
+    document.getElementById("itemsForm").onsubmit = function (e) {
+        const cards = document.querySelectorAll(".gold-item");
+        let isValid = true;
+
+        cards.forEach(card => {
+            // Check weights
+            if (!validateWeights(card)) {
+                isValid = false;
+            }
+
+            // Check image count (min 2)
+            const index = card.getAttribute("data-index");
+            const existingCount = parseInt(card.getAttribute("data-img-count") || "0");
+            const newCount = itemFileStores[index] ? itemFileStores[index].size : 0;
+
+            if (existingCount + newCount < 2) {
+                alert(`Item ${parseInt(index) + 1}: At least 2 images are required.`);
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            return false;
+        }
+    };
+
+    document.getElementById("addItem").onclick = function () {
+        const container = document.getElementById("items-container");
+        const template = document.querySelector(".gold-item");
+        const clone = template.cloneNode(true);
+
+        clone.setAttribute("data-index", itemIndex);
+        itemFileStores[itemIndex] = new Map(); // Initialize store for new item
+
+        // Setup unique file input
+        const fileInput = clone.querySelector("input[type='file']");
+        fileInput.name = `item_images_${itemIndex}[]`;
+        fileInput.id = `item_images_${itemIndex}`;
+        fileInput.value = "";
+        fileInput.setAttribute('onchange', `previewItemImages(this, ${itemIndex})`);
+
+        // Setup camera button
+        const cameraBtn = clone.querySelector(".open-camera");
+        if (cameraBtn) {
+            cameraBtn.setAttribute("data-target", `item_images_${itemIndex}`);
+            cameraBtn.removeAttribute("data-bound");
+        }
+
+        // Setup upload button
+        const uploadBtn = clone.querySelector(".btn-upload");
+        if (uploadBtn) {
+            uploadBtn.setAttribute("onclick", `document.getElementById('item_images_${itemIndex}').click()`);
+        }
+
+        // Setup preview area
+        const previewContainer = clone.querySelector('.image-preview-container');
+        previewContainer.id = `preview_${itemIndex}`;
+        previewContainer.style.display = 'none';
+        previewContainer.querySelector('.image-preview-grid').innerHTML = '';
+
+        // Clear all text inputs and textareas
+        clone.querySelectorAll("input[type='text'], input[type='number'], textarea").forEach(el => {
+            if (!el.hasAttribute("readonly")) el.value = "";
+        });
+        // Reset select
+        clone.querySelector("select").selectedIndex = 0;
+
+        // Add remove functionality
+        clone.querySelector(".remove-item").onclick = function () {
+            const allItems = document.querySelectorAll(".gold-item");
+            if (allItems.length > 1) {
+                const idx = clone.getAttribute('data-index');
+                delete itemFileStores[idx];
+                clone.remove();
+                updateItemNumbers();
+            } else {
+                alert("At least one gold item is required");
+            }
+        };
+
+        container.appendChild(clone);
+        itemIndex++;
+        updateItemNumbers();
+    };
+
+    // Remove functionality for first item
+    document.querySelector(".remove-item").onclick = function () {
+        const allItems = document.querySelectorAll(".gold-item");
+        if (allItems.length > 1) {
+            const card = this.closest(".gold-item");
+            const idx = card.getAttribute('data-index');
+            delete itemFileStores[idx];
+            card.remove();
+            updateItemNumbers();
+        } else {
+            alert("At least one gold item is required");
+        }
+    };
+</script>
 {% endblock %}

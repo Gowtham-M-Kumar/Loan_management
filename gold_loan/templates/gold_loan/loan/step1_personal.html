@@ -4,7 +4,7 @@
 {% block title %}Loan Entry – Step 1{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry/step1.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
 {% endblock %}
 
 {% block page_header %}
@@ -12,13 +12,22 @@
 {% endblock %}
 
 {% block content %}
+{% if error %}
+<p style="color:red; font-weight:600; margin-bottom: 15px;">{{ error }}</p>
+{% endif %}
+
 <form method="post" enctype="multipart/form-data" class="loan-form">
     {% csrf_token %}
+    <input type="hidden" name="existing_customer_id" id="existingCustomerId" value="">
+    <!-- Preselected ID for auto-selection -->
+    <input type="hidden" id="preselectedCustomerId" value="{{ preselected_customer.id|default:'' }}">
 
     <!-- EXISTING CUSTOMER -->
     <div class="card">
         <h4>Select Existing Customer</h4>
-        <input type="text" placeholder="Search by name / mobile / customer ID">
+        <input type="text" id="customerSearch" placeholder="Search by Name / Mobile / Aadhaar / Customer ID"
+            autocomplete="off">
+        <div id="searchResults" style="margin-top: 10px;"></div>
     </div>
 
     <div class="divider">OR</div>
@@ -28,35 +37,266 @@
         <h4>Add New Customer</h4>
 
         <div class="grid-2">
-            <input type="text" name="name" placeholder="Customer Name *" required>
-            <input type="text" name="mobile_primary" placeholder="Mobile Number *" required pattern="[0-9]{10}">
+            <input type="text" name="name" value="{{ existing_data.name|default:'' }}" placeholder="Customer Name *"
+                required>
+            <input type="text" name="mobile_primary" value="{{ existing_data.mobile_primary|default:'' }}"
+                placeholder="Mobile Number *" required pattern="[0-9]{10}" maxlength="10">
         </div>
 
         <div class="grid-2">
-            <input type="text" name="mobile_secondary" placeholder="Alternate Mobile">
-            <input type="email" name="email" placeholder="Email">
+            <input type="text" name="mobile_secondary" value="{{ existing_data.mobile_secondary|default:'' }}"
+                placeholder="Alternate Mobile" pattern="[0-9]{10}" maxlength="10">
+            <input type="email" name="email" value="{{ existing_data.email|default:'' }}" placeholder="Email">
         </div>
 
-        <textarea name="address" placeholder="Address *" required></textarea>
+        <textarea name="address" placeholder="Address *" required>{{ existing_data.address|default:'' }}</textarea>
 
         <div class="grid-2">
-            <input type="text" name="aadhaar_number" placeholder="Aadhaar Number *" required pattern="[0-9]{12}">
-            <input type="text" name="profession" placeholder="Profession *" required>
+            <input type="text" name="aadhaar_number" value="{{ existing_data.aadhaar_number|default:'' }}"
+                placeholder="Aadhaar Number *" required pattern="[0-9]{12}" maxlength="12">
+            <input type="text" name="profession" value="{{ existing_data.profession|default:'' }}"
+                placeholder="Profession *" required>
         </div>
 
         <div class="grid-2">
-            <input type="text" name="nominee_name" placeholder="Nominee Name *" required>
-            <input type="text" name="nominee_mobile" placeholder="Nominee Mobile *" required pattern="[0-9]{10}">
+            <input type="text" name="nominee_name" value="{{ existing_data.nominee_name|default:'' }}"
+                placeholder="Nominee Name *" required>
+            <input type="text" name="nominee_mobile" value="{{ existing_data.nominee_mobile|default:'' }}"
+                placeholder="Nominee Mobile *" required pattern="[0-9]{10}" maxlength="10">
         </div>
 
-        <label class="file-box">
-            Upload / Take Photo *
-            <input type="file" name="customer_photo" accept="image/*" required>
-        </label>
+        <div class="file-box">
+            <span style="font-weight: 500; display:block; margin-bottom:8px;">Customer Photo</span>
+
+            <div class="media-buttons">
+                <!-- Camera Button -->
+                <button type="button" class="btn-media camera open-camera" data-target="customerPhoto">
+                    <span>📷</span> Take Photo
+                </button>
+
+                <!-- Upload Button -->
+                <button type="button" class="btn-media" onclick="document.getElementById('customerPhoto').click()">
+                    <span>📂</span> Upload from Device
+                </button>
+            </div>
+
+            <input type="file" name="customer_photo" accept="image/*" capture="user" id="customerPhoto"
+                onchange="previewCustomerPhoto(event)" style="display:none;" {% if not customer_photo %}required{% endif %}>
+        </div>
+
+        <!-- Image Preview -->
+        {% if customer_photo %}
+        <div id="photoPreview" style="margin-top: 10px;">
+            <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+            <img id="photoPreviewImg"
+                src="{{ MEDIA_URL }}{{ customer_photo }}"
+                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+        </div>
+        {% else %}
+        <div id="photoPreview" style="margin-top: 10px; display: none;">
+            <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+            <img id="photoPreviewImg"
+                src=""
+                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+        </div>
+        {% endif %}
+
     </div>
 
     <div class="actions">
         <button type="submit" class="btn-primary">Next →</button>
     </div>
 </form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let searchTimeout;
+    let selectedCustomerId = null;
+
+    // Customer search functionality
+    const customerSearch = document.getElementById('customerSearch');
+    if (customerSearch) {
+        customerSearch.addEventListener('input', function (e) {
+            const query = e.target.value.trim();
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-customers/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displaySearchResults(data.customers);
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                    });
+            }, 300);
+        });
+    }
+
+    function displaySearchResults(customers) {
+        const resultsDiv = document.getElementById('searchResults');
+        if (!resultsDiv) return;
+
+        if (customers.length === 0) {
+            resultsDiv.innerHTML = '<p style="color: #666; font-size: 14px;">No customers found</p>';
+            return;
+        }
+
+        let html = '<div style="border: 1px solid #e5e7eb; border-radius: 8px; max-height: 300px; overflow-y: auto;">';
+        customers.forEach(customer => {
+            const photoHtml = customer.photo_url
+                ? `<img src="${customer.photo_url}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 1px solid #ddd;">`
+                : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: 600; color: #6b7280;">${customer.name.charAt(0).toUpperCase()}</div>`;
+
+            html += `
+                <div class="customer-result" onclick="selectCustomer(${customer.id})" 
+                     style="padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: background 0.2s; display: flex; align-items: center;"
+                     onmouseover="this.style.background='#f3f4f6'" 
+                     onmouseout="this.style.background='white'">
+                    ${photoHtml}
+                    <div>
+                        <div style="font-weight: 600; font-size: 15px; color: #111;">${customer.name}</div>
+                        <div style="font-size: 13px; color: #666;">
+                            ID: ${customer.customer_id} | 📞 ${customer.mobile_primary}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+    }
+
+    function selectCustomer(customerId) {
+        fetch(`/api/get-customer/${customerId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    populateCustomerForm(data.customer);
+                    selectedCustomerId = customerId;
+                    document.getElementById('existingCustomerId').value = customerId;
+                    document.getElementById('customerSearch').value = '';
+                    document.getElementById('searchResults').innerHTML =
+                        `<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;">
+                            <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Customer selected: ${data.customer.name}</p>
+                            <button type="button" onclick="deselectCustomer()" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">✕ Deselect</button>
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching customer:', error);
+            });
+    }
+
+    function deselectCustomer() {
+        // Clear selected customer ID
+        selectedCustomerId = null;
+        document.getElementById('existingCustomerId').value = '';
+
+        // Clear search results
+        document.getElementById('searchResults').innerHTML = '';
+        document.getElementById('customerSearch').value = '';
+
+        // Clear all form fields
+        const fields = ['name', 'mobile_primary', 'mobile_secondary', 'email', 'address', 'aadhaar_number', 'profession', 'nominee_name', 'nominee_mobile'];
+        fields.forEach(field => {
+            const el = document.querySelector(`[name="${field}"]`);
+            if (el) el.value = '';
+        });
+
+        // Clear photo preview
+        const photoInput = document.getElementById('customerPhoto');
+        if (photoInput) photoInput.value = '';
+        const photoPreview = document.getElementById('photoPreview');
+        if (photoPreview) photoPreview.style.display = 'none';
+
+        // Make fields editable again and restore required attributes
+        const inputs = document.querySelectorAll('.card input, .card textarea');
+        inputs.forEach(input => {
+            if (input.id !== 'customerSearch') {
+                input.removeAttribute('readonly');
+                input.style.backgroundColor = '';
+
+                // Restore required attributes for mandatory fields
+                if (['name', 'mobile_primary', 'address', 'aadhaar_number', 'profession', 'nominee_name', 'nominee_mobile'].includes(input.name)) {
+                    input.setAttribute('required', 'required');
+                }
+            }
+        });
+
+        // Restore required for textarea
+        const addressField = document.querySelector('[name="address"]');
+        if (addressField) addressField.setAttribute('required', 'required');
+
+        // Restore photo required
+        const photoField = document.getElementById('customerPhoto');
+        if (photoField) photoField.setAttribute('required', 'required');
+    }
+
+    function populateCustomerForm(customer) {
+        const fields = ['name', 'mobile_primary', 'mobile_secondary', 'email', 'address', 'aadhaar_number', 'profession', 'nominee_name', 'nominee_mobile'];
+        fields.forEach(field => {
+            const el = document.querySelector(`[name="${field}"]`);
+            if (el) el.value = customer[field] || '';
+        });
+
+        // Make fields readonly
+        const inputs = document.querySelectorAll('.card input, .card textarea');
+        inputs.forEach(input => {
+            if (input.id !== 'customerSearch') {
+                input.setAttribute('readonly', 'readonly');
+                input.style.backgroundColor = '#f9fafb';
+                input.removeAttribute('required');
+            }
+        });
+    }
+
+    function previewCustomerPhoto(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('photoPreview');
+                const img = document.getElementById('photoPreviewImg');
+                img.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Auto-select if preselected_customer exists
+    document.addEventListener('DOMContentLoaded', function () {
+        const preId = document.getElementById('preselectedCustomerId').value;
+        if (preId) {
+            selectCustomer(preId);
+        }
+    });
+
+    // Form validation
+    document.querySelector("form").onsubmit = function (e) {
+        const existingId = document.getElementById('existingCustomerId').value;
+
+        // If not existing, check new customer fields
+        if (!existingId) {
+            const name = document.querySelector("[name='name']").value.trim();
+            const mobile = document.querySelector("[name='mobile_primary']").value.trim();
+            const aadhaar = document.querySelector("[name='aadhaar_number']").value.trim();
+            const photo = document.getElementById('customerPhoto').files.length;
+
+            if (!name || mobile.length !== 10 || aadhaar.length !== 12 || photo === 0) {
+                alert("Please fill all required fields correctly (10-digit mobile, 12-digit Aadhaar, and Photo).");
+                e.preventDefault();
+                return false;
+            }
+        }
+    };
+</script>
 {% endblock %}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Summary - {{ loan.loan_number }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'gold_loan/css/receipts.css' %}">
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">🖨 Print Summary</button>
+
+    <div class="receipt-header">
+        <h1 class="company-name">PUNNAGAI GOLD LOAN</h1>
+        <div class="receipt-title">Payment Summary Report</div>
+
+        <div class="meta-info">
+            <div>
+                <strong>Customer:</strong> {{ customer.name }} ({{ customer.customer_id }})
+            </div>
+            <div>
+                <strong>Loan No:</strong> {{ loan.loan_number }}
+            </div>
+            <div>
+                <strong>Date:</strong> {{ now|date:"d-M-Y" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <div class="summary-item">
+            <span class="summary-label">Total Loan Amount</span>
+            <span class="summary-value">₹{{ total_loan_amount }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Amount Paid</span>
+            <span class="summary-value" style="color: #059669;">₹{{ total_amount_paid }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Outstanding Principal</span>
+            <span class="summary-value" style="color: #dc2626;">₹{{ outstanding_principal|floatformat:2 }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Interest Paid</span>
+            <span class="summary-value">₹{{ total_interest_paid }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Principal Paid</span>
+            <span class="summary-value">₹{{ total_principal_paid }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Pending Interest</span>
+            <span class="summary-value" style="color: #d97706;">₹{{ loan.pending_interest }}</span>
+        </div>
+    </div>
+
+    <h3>Payment History</h3>
+    <table class="receipt-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Mode</th>
+                <th>Total Paid</th>
+                <th>Interest Comp.</th>
+                <th>Principal Comp.</th>
+                <th>Ref / Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in payments %}
+            <tr>
+                <td>{{ p.payment_date|date:"d-M-Y" }}</td>
+                <td>{{ p.get_payment_mode_display }}</td>
+                <td style="font-weight: bold;">₹{{ p.total_amount }}</td>
+                <td>₹{{ p.interest_component }}</td>
+                <td>₹{{ p.principal_component }}</td>
+                <td>
+                    {{ p.reference_no }}
+                    {% if p.remarks %}<br><span style="color:#666; font-size:11px;">{{ p.remarks }}</span>{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 20px;">No payments recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if payments %}
+        <tfoot>
+            <tr style="background: #f9f9f9; font-weight: bold;">
+                <td colspan="2" style="text-align: right;">TOTALS:</td>
+                <td>₹{{ total_amount_paid }}</td>
+                <td>₹{{ total_interest_paid }}</td>
+                <td>₹{{ total_principal_paid }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+
+    <div class="receipt-footer">
+        <div style="font-size: 12px; color: #666;">
+            Summary generated on {{ now|date:"d-M-Y H:i:s" }}
+        </div>
+    </div>
+
+</body>
+
+</html>

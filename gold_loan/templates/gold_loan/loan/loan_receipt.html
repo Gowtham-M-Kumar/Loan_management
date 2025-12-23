@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Receipt - {{ loan.loan_number }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'gold_loan/css/receipts.css' %}">
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">🖨 Print Receipt</button>
+
+    <div class="receipt-header">
+        <h1 class="company-name">PUNNAGAI GOLD LOAN</h1>
+        <div class="receipt-title">Loan Receipt</div>
+
+        <div class="meta-info">
+            <div>
+                <strong>Receipt No:</strong> RE-{{ loan.loan_number }}-{{ now|date:"ymdHi" }}
+            </div>
+            <div>
+                <strong>Date:</strong> {{ now|date:"d-M-Y h:i A" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- Customer Details -->
+        <div class="section">
+            <div class="section-header">Customer Details</div>
+            <div class="receipt-row">
+                <span class="receipt-label">Name:</span>
+                <span class="receipt-value">{{ customer.name }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Customer ID:</span>
+                <span class="receipt-value">{{ customer.customer_id }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Mobile:</span>
+                <span class="receipt-value">{{ customer.mobile_primary }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Aadhaar:</span>
+                <span class="receipt-value">XXXXXXXX{{ customer.aadhaar_number|slice:"-4:" }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Address:</span>
+                <span class="receipt-value">{{ customer.address }}</span>
+            </div>
+        </div>
+
+        <!-- Loan Details -->
+        <div class="section">
+            <div class="section-header">Loan Details</div>
+            <div class="receipt-row">
+                <span class="receipt-label">Loan Number:</span>
+                <span class="receipt-value">{{ loan.loan_number }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Lot Number:</span>
+                <span class="receipt-value">{{ loan.lot_number }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Loan Date:</span>
+                <span class="receipt-value">{{ loan.created_at|date:"d-M-Y" }}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Interest Rate:</span>
+                <span class="receipt-value">{{ loan.interest_rate }}%</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Price/Gram:</span>
+                <span class="receipt-value">₹{{ loan.price_per_gram }}</span>
+            </div>
+            <div class="receipt-row" style="margin-top: 10px;">
+                <span class="receipt-label" style="color: #000; font-size: 16px;">Total Amount:</span>
+                <span class="receipt-value" style="font-size: 16px;">₹{{ loan.total_amount }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gold Summary -->
+    <div class="section">
+        <div class="section-header">Gold Details</div>
+        <table class="receipt-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Item Name</th>
+                    <th>Carat</th>
+                    <th>Gross Wt (g)</th>
+                    <th>Net Wt (g)</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.item_name }}</td>
+                    <td>{{ item.get_carat_display }}</td>
+                    <td>{{ item.gross_weight }}</td>
+                    <td>{{ item.approved_net_weight }}</td>
+                    <td>{{ item.description }}</td>
+                </tr>
+                {% endfor %}
+                <tr style="background: #f9f9f9; font-weight: bold;">
+                    <td colspan="4" style="text-align: right;">Total Net Weight:</td>
+                    <td>{{ total_weight }}g</td>
+                    <td>{{ total_items }} Items</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="receipt-footer">
+        <div style="font-size: 12px; color: #666;">
+            <p>This is a system generated receipt.</p>
+            <p>Generated on {{ now|date:"d-M-Y H:i:s" }}</p>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div>Authorized Signatory</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

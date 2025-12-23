@@ -1,31 +1,102 @@
 from django.db import models
+from django.utils import timezone
+from django.core.validators import RegexValidator
+
+
+# =========================
+# VALIDATORS
+# =========================
+
+mobile_validator = RegexValidator(
+    regex=r'^\d{10}$',
+    message="Mobile number must be exactly 10 digits."
+)
+
+aadhaar_validator = RegexValidator(
+    regex=r'^\d{12}$',
+    message="Aadhaar number must be exactly 12 digits."
+)
+
 
 # =========================
 # CUSTOMER
 # =========================
 class Customer(models.Model):
     name = models.CharField(max_length=100)
-    
-    mobile_primary = models.CharField(max_length=10, unique=True)
-    mobile_secondary = models.CharField(max_length=10, blank=True)
+
+    mobile_primary = models.CharField(
+        max_length=10,
+        unique=True,
+        validators=[mobile_validator]
+    )
+
+    mobile_secondary = models.CharField(
+        max_length=10,
+        blank=True,
+        validators=[mobile_validator]
+    )
 
     email = models.EmailField(blank=True)
     address = models.TextField()
 
-    aadhaar_number = models.CharField(max_length=12, unique=True)
+    aadhaar_number = models.CharField(
+        max_length=12,
+        unique=True,
+        validators=[aadhaar_validator]
+    )
 
     profession = models.CharField(max_length=100)
 
     nominee_name = models.CharField(max_length=100)
-    nominee_mobile = models.CharField(max_length=10)
 
-    photo = models.ImageField(upload_to="customers/photos/")
+    nominee_mobile = models.CharField(
+        max_length=10,
+        validators=[mobile_validator]
+    )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    photo = models.ImageField(upload_to="customers/photos/", blank=True)
+
+    customer_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} ({self.mobile_primary})"
+        return f"{self.name} ({self.customer_id or 'No ID'})"
+
+    def save(self, *args, **kwargs):
+        if not self.customer_id:
+            self.customer_id = self.generate_customer_id()
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_customer_id():
+        """Generate unique customer ID in format: PGXXXXXX"""
+        # Get the last created customer's ID to increment
+        last_customer = Customer.objects.order_by('-id').first()
+        
+        if last_customer and last_customer.customer_id and last_customer.customer_id.startswith('PG'):
+             try:
+                 last_seq = int(last_customer.customer_id[2:])
+                 new_seq = last_seq + 1
+             except ValueError:
+                 new_seq = 1
+        else:
+             # Fallback if no valid previous ID found, or we rely on DB ID count (approx approximation for first run)
+             # But better to just check if any exists. 
+             # If we are filling existing, 'last_customer' might just be the one with highest ID in DB.
+             # If we use ID count, it might clash if rows deleted.
+             # Let's count *ids* to be safe or search for max code.
+             
+             # Robust way: Search for highest PGxxxxx
+             last_pg = Customer.objects.filter(customer_id__startswith='PG').order_by('-customer_id').first()
+             if last_pg:
+                 try:
+                     last_seq = int(last_pg.customer_id[2:])
+                     new_seq = last_seq + 1
+                 except ValueError:
+                     new_seq = 1
+             else:
+                 new_seq = 1
+
+        return f"PG{new_seq:06d}"
 
 
 # =========================
@@ -67,8 +138,62 @@ class Loan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    pending_interest = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Interest logic dates
+    loan_start_date = models.DateTimeField(null=True, blank=True)
+    interest_lock_until = models.DateTimeField(null=True, blank=True)
+    last_interest_calculated_at = models.DateTimeField(null=True, blank=True)
+    last_capitalization_date = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    parent_loan = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='extensions')
+    
+    # Bank / Pledge Details (added later via edit page)
+    bank_name = models.CharField(max_length=200, blank=True, null=True)
+    bank_address = models.TextField(blank=True, null=True)
+    pledge_receipt_no = models.CharField(max_length=100, blank=True, null=True)
+    pledge_notes = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return self.loan_number
+
+    @staticmethod
+    def generate_lot_number():
+        """Generate unique lot number in format: LOT-YYYYMMDD-XXXX"""
+        from datetime import datetime
+        date_str = datetime.now().strftime("%Y%m%d")
+        
+        # Find the last lot number for today
+        prefix = f"LOT-{date_str}-"
+        last_lot = Loan.objects.filter(lot_number__startswith=prefix).order_by('-lot_number').first()
+        
+        if last_lot:
+            # Extract the sequence number and increment
+            last_seq = int(last_lot.lot_number.split('-')[-1])
+            new_seq = last_seq + 1
+        else:
+            new_seq = 1
+        
+        return f"{prefix}{new_seq:04d}"
+
+    @staticmethod
+    def generate_loan_number():
+        """Generate unique loan number in format: LN-YYYYMMDD-XXXX"""
+        from datetime import datetime
+        date_str = datetime.now().strftime("%Y%m%d")
+        
+        # Find the last loan number for today
+        prefix = f"LN-{date_str}-"
+        last_loan = Loan.objects.filter(loan_number__startswith=prefix).order_by('-loan_number').first()
+        
+        if last_loan:
+            # Extract the sequence number and increment
+            last_seq = int(last_loan.loan_number.split('-')[-1])
+            new_seq = last_seq + 1
+        else:
+            new_seq = 1
+        
+        return f"{prefix}{new_seq:04d}"
 
 
 # =========================
@@ -98,7 +223,7 @@ class GoldItem(models.Model):
     description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.item_name
+        return f"{self.item_name} ({self.approved_net_weight}g)"
 
 
 # =========================
@@ -113,6 +238,9 @@ class GoldItemImage(models.Model):
 
     image = models.ImageField(upload_to="gold_items/images/")
 
+    def __str__(self):
+        return f"Image for {self.gold_item.item_name}"
+
 
 # =========================
 # LOAN DOCUMENT
@@ -122,12 +250,14 @@ class LoanDocument(models.Model):
     DOCUMENT_AADHAAR = "aadhaar"
     DOCUMENT_PAN = "pan"
     DOCUMENT_PHOTO = "photo"
+    DOCUMENT_CLOSURE = "closure_receipt"
     DOCUMENT_OTHER = "other"
 
     DOCUMENT_CHOICES = [
         (DOCUMENT_AADHAAR, "Aadhaar"),
         (DOCUMENT_PAN, "PAN"),
         (DOCUMENT_PHOTO, "Photo"),
+        (DOCUMENT_CLOSURE, "Closure Receipt"),
         (DOCUMENT_OTHER, "Other"),
     ]
 
@@ -142,6 +272,72 @@ class LoanDocument(models.Model):
         choices=DOCUMENT_CHOICES
     )
 
-    other_name = models.CharField(max_length=100, blank=True)
+    other_name = models.CharField(
+        max_length=100,
+        blank=True
+    )
 
-    image = models.ImageField(upload_to="loan_documents/")
+    image = models.ImageField(upload_to="loan_documents/", blank=True)
+
+    def __str__(self):
+        return f"{self.document_type} document for {self.loan.loan_number}"
+
+
+# =========================
+# PAYMENT
+# =========================
+class Payment(models.Model):
+
+    PAYMENT_MODE_CASH = "cash"
+    PAYMENT_MODE_UPI = "upi"
+    PAYMENT_MODE_BANK = "bank"
+
+    PAYMENT_MODE_CHOICES = [
+        (PAYMENT_MODE_CASH, "Cash"),
+        (PAYMENT_MODE_UPI, "UPI"),
+        (PAYMENT_MODE_BANK, "Bank Transfer"),
+    ]
+
+    loan = models.ForeignKey(
+        Loan,
+        on_delete=models.PROTECT,
+        related_name="payments"
+    )
+
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    interest_component = models.DecimalField(max_digits=12, decimal_places=2)
+    principal_component = models.DecimalField(max_digits=12, decimal_places=2)
+
+    payment_date = models.DateField(auto_now_add=True)
+    payment_mode = models.CharField(max_length=10, choices=PAYMENT_MODE_CHOICES)
+    
+    reference_no = models.CharField(max_length=50, blank=True)
+    remarks = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment {self.id} for {self.loan.loan_number}"
+
+
+# =========================
+# LOAN EXPENSE (Internal)
+# =========================
+class LoanExpense(models.Model):
+    loan = models.ForeignKey(
+        Loan,
+        on_delete=models.CASCADE,
+        related_name="expenses"
+    )
+
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    medium = models.CharField(max_length=50, blank=True, null=True)  # e.g. Cash, Online
+    notes = models.TextField(blank=True, null=True)
+    date = models.DateField(default=timezone.now)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.medium}: {self.amount}"
+
+

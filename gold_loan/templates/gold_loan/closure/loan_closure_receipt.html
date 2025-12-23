@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Closure Receipt - {{ loan.loan_number }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'gold_loan/css/receipts.css' %}">
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">🖨 Print Receipt</button>
+
+    <div class="receipt-header">
+        <h1 class="company-name">PUNNAGAI GOLD LOAN</h1>
+        <div class="receipt-title">Loan Closure Receipt</div>
+
+        <div class="meta-info">
+            <div>
+                <strong>Loan No:</strong> {{ loan.loan_number }}
+            </div>
+            <div>
+                <strong>Closed Date:</strong> {{ loan.closed_at|date:"d-M-Y h:i A" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="details-box">
+        <div class="receipt-row-alt">
+            <span class="receipt-label-alt">Customer Name:</span>
+            <span class="value">{{ customer.name }}</span>
+        </div>
+        <div class="receipt-row-alt">
+            <span class="receipt-label-alt">Customer ID:</span>
+            <span class="receipt-value">{{ customer.customer_id }}</span>
+        </div>
+        <div class="receipt-row-alt">
+            <span class="receipt-label-alt">Loan Start Date:</span>
+            <span class="receipt-value">{{ loan.created_at|date:"d-M-Y" }}</span>
+        </div>
+        <div class="receipt-row-alt">
+            <span class="receipt-label-alt">Original Loan Amount:</span>
+            <span class="receipt-value">₹{{ loan.total_amount }}</span>
+        </div>
+        <div class="receipt-row-alt">
+            <span class="receipt-label-alt">Total Amount Paid:</span>
+            <span class="receipt-value">₹{{ total_paid_amount }}</span>
+        </div>
+    </div>
+
+    <div class="status-box">
+        This loan is fully settled and closed.
+    </div>
+
+    <div style="font-size: 13px; color: #666; text-align: center;">
+        All pledged items associated with this loan have been returned to the customer.
+    </div>
+
+    <div class="receipt-footer">
+        <div style="font-size: 12px; color: #666;">
+            <p>System Generated Receipt</p>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div>Authorized Signatory</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

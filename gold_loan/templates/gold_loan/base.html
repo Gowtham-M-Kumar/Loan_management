@@ -1,86 +1,101 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Gold Loan{% endblock %}</title>
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{% static 'gold_loan/css/base.css' %}">
-    
+    <link rel="stylesheet" href="{% static 'gold_loan/css/base.css' %}?v=1.1">
+
 
     {% block head %}{% endblock %}
 </head>
+
 <body>
 
-<!-- ===== HEADER ===== -->
-<header class="app-header">
-    <div class="header-left">
-        <h2>Gold Loan</h2>
-    </div>
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-left">
+            <h2>Punnagai Gold Loan</h2>
+        </div>
 
-    <div class="header-right">
-        <!-- later: user name, logout -->
-        <span>Admin</span>
-    </div>
-</header>
+        <div class="header-right">
+            <!-- later: user name, logout -->
+            <a href="/admin/" style="color: inherit; text-decoration: none;">Admin</a>
+        </div>
+    </header>
 
-<!-- ===== BODY WRAPPER ===== -->
-<div class="app-body">
+    <!-- ===== BODY WRAPPER ===== -->
+    <div class="app-body">
 
-    <!-- ===== SIDEBAR ===== -->
+        <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar">
             <ul class="sidebar-menu">
+
                 <li>
-                    <a href="/"
-                    class="{% if request.path == '/' %}active{% endif %}">
-                    Dashboard
+                    <a href="{% url 'gold_loan:loan_entry_step1' %}"
+                        class="{% if 'loan/entry' in request.path %}active{% endif %}">
+                        New Loan
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'gold_loan:dashboard' %}"
+                        class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        Dashboard
                     </a>
                 </li>
 
                 <li>
-                    <a href="/loan/"
-                    class="{% if request.path|slice:':6' == '/loan/' %}active{% endif %}">
-                    New Loan
+                    <a href="{% url 'gold_loan:customer_list' %}"
+                        class="{% if 'customers' in request.path %}active{% endif %}">
+                        Customers
+                    </a>
+                </li>
+
+
+
+                <li>
+                    <a href="{% url 'gold_loan:closed_loans_list' %}"
+                        class="{% if request.resolver_match.url_name == 'closed_loans_list' %}active{% endif %}">
+                        Closed Loans
                     </a>
                 </li>
 
                 <li>
-                    <a href="/payment/"
-                    class="{% if request.path|slice:':9' == '/payment/' %}active{% endif %}">
-                    Payments
+                    <a href="{% url 'gold_loan:extended_loans_list' %}"
+                        class="{% if request.resolver_match.url_name == 'extended_loans_list' %}active{% endif %}">
+                        Extended Loans
                     </a>
                 </li>
 
-                <li>
-                    <a href="/close/"
-                    class="{% if request.path|slice:':7' == '/close/' %}active{% endif %}">
-                    Closed Loans
-                    </a>
-                </li>
             </ul>
         </aside>
 
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <main class="main-content">
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
 
-        <!-- Page Header -->
-        <div class="page-header">
-            {% block page_header %}
-            <h3>Page</h3>
-            {% endblock %}
-        </div>
+            <!-- Page Header -->
+            <div class="page-header">
+                {% block page_header %}
+                <h3>Page</h3>
+                {% endblock %}
+            </div>
 
-        <!-- Page Content -->
-        <div class="page-content">
-            {% block content %}{% endblock %}
-        </div>
+            <!-- Page Content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
 
-    </main>
-</div>
+        </main>
+    </div>
 
-<script src="{% static 'gold_loan/js/main.js' %}"></script>
-{% block scripts %}{% endblock %}
+    <script src="{% static 'gold_loan/js/main.js' %}"></script>
+    {% block scripts %}{% endblock %}
+    {% include "gold_loan/components/camera_modal.html" %}
+    <script src="{% static 'gold_loan/js/camera.js' %}"></script>
 </body>
+
 </html>

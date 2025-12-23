@@ -1,0 +1,112 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}{{ customer.name }} - Details{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/dashboard.css' %}?v=1">
+{% endblock %}
+
+{% block page_header %}
+<div style="display: flex; align-items: center; justify-content: space-between;">
+    <h3>Customer Details</h3>
+    <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
+        style="font-size: 14px; padding: 6px 12px;">← Back to Customers</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Section 1: Customer Profile -->
+<div class="section-card"
+    style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+    <div style="display: flex; align-items: flex-start; gap: 25px;">
+        <div
+            style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; background: #f3f4f6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 1px solid #e5e7eb;">
+            {% if customer.photo %}
+            <img src="{{ customer.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+            👤
+            {% endif %}
+        </div>
+        <div style="flex-grow: 1;">
+            <h2 style="margin: 0 0 10px 0; font-size: 24px;">{{ customer.name }}</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500;">Customer
+                        ID</div>
+                    <div style="font-size: 15px; color: #111827;">{{ customer.customer_id }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500;">Mobile
+                    </div>
+                    <div style="font-size: 15px; color: #111827;">{{ customer.mobile_primary }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500;">
+                        Profession</div>
+                    <div style="font-size: 15px; color: #111827;">{{ customer.profession }}</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 500;">Loans
+                        Summary</div>
+                    <div style="font-size: 15px; color: #111827;">
+                        <span style="color: #059669; font-weight: 600;">{{ total_active_loans }} Active</span> / {{
+                        loans|length }} Total
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Loans List -->
+<div class="loan-list">
+    <h4 class="section-title" style="margin-bottom: 15px; font-size: 18px; color: #111827;">Loan History</h4>
+    <table class="loan-table">
+        <thead>
+            <tr>
+                <th>Loan Number</th>
+                <th>Lot No</th>
+                <th>Status</th>
+                <th>Loan Amount</th>
+                <th>Out. Principal</th>
+                <th>Created Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.loan_number }}</td>
+                <td>{{ loan.lot_number }}</td>
+                <td>
+                    {% if loan.status == 'active' %}
+                    <span class="status-badge-active"
+                        style="background: #ecfdf5; color: #065f46; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 500;">Active</span>
+                    {% else %}
+                    <span class="status-badge-closed"
+                        style="background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 500;">Closed</span>
+                    {% endif %}
+                </td>
+                <td>₹{{ loan.total_amount }}</td>
+                <td>
+                    {% if loan.status == 'active' %}
+                    ₹{{ loan.calculated_outstanding_principal }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ loan.created_at|date:"d M Y" }}</td>
+                <td><a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-sm"
+                        style="color: #2563eb; text-decoration: none; font-weight: 500;">View Loan</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align:center; padding: 20px; color: #6b7280;">No loans found for this
+                    customer.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

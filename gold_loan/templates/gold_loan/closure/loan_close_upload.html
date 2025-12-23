@@ -1,0 +1,93 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Upload Closure Receipt - {{ loan.loan_number }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_close.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="close-container">
+    <div class="close-header">
+        <h2 style="margin: 0; color: #111;">Closure Receipt</h2>
+        <div style="color: #666; margin-top: 5px;">Upload signed closure receipt</div>
+    </div>
+
+    <!-- Print Button -->
+    <div style="text-align: right; margin-bottom: 20px;">
+        <a href="{% url 'gold_loan:loan_closure_receipt' loan.id %}" target="_blank"
+            style="color: #2563eb; font-weight: 500; text-decoration: none;">
+            🖨️ Print Closure Receipt Template
+        </a>
+    </div>
+
+    <!-- Uploaded List -->
+    <div style="margin-bottom: 20px;">
+        <h4 style="margin-bottom: 10px;">Attached Receipts</h4>
+        {% if receipts %}
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for doc in receipts %}
+            <div
+                style="display: flex; align-items: center; justify-content: space-between; background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">📄</span>
+                    <a href="{{ doc.image.url }}" target="_blank" style="color: #111; text-decoration: none;">Receipt
+                        #{{ forloop.counter }}</a>
+                </div>
+                <form method="post" style="margin:0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="doc_id" value="{{ doc.id }}">
+                    <button type="submit"
+                        style="color: #ef4444; border: none; background: none; cursor: pointer;">Remove</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding: 15px; background: #fefce8; color: #a16207; border: 1px solid #fde047; border-radius: 6px;">
+            ⚠️ At least one receipt must be uploaded to proceed.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upload Form -->
+    <form method="post" enctype="multipart/form-data"
+        style="margin-bottom: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload">
+
+        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Add New Receipt</label>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div style="flex: 1; display: flex; gap: 10px;">
+                <input type="file" id="receiptInput" name="receipt_image" accept="image/*,application/pdf"
+                    capture="environment" required
+                    style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+
+                <button type="button" class="btn-secondary open-camera" data-target="receiptInput"
+                    style="white-space: nowrap; height: 38px;">
+                    📷 Camera
+                </button>
+            </div>
+
+            <button type="submit" class="btn-primary"
+                style="background: #3b82f6; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; height: 38px;">
+                Upload
+            </button>
+        </div>
+    </form>
+
+    <!-- Final Actions -->
+    <form action="{% url 'gold_loan:loan_close_confirm' loan.id %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn-close" {% if not receipts %}disabled style="opacity: 0.5; cursor: not-allowed;"
+            {% endif %} onclick="return confirm('Confirm closing this loan? Current status will be set to CLOSED.')">
+            Confirm Close
+        </button>
+    </form>
+
+    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel"
+        style="text-decoration: none; display: inline-block; margin-top: 15px;">Discard & Exit</a>
+</div>
+{% endblock %}
