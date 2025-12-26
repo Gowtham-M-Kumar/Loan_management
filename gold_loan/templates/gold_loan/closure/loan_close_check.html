@@ -29,32 +29,58 @@
     </div>
 
     {% if can_close %}
-    <div class="success-box" style="margin-top: 20px;">
-        This loan is fully paid and eligible for closure.
+    <div class="success-box" style="margin-top: 20px; border-style: dashed; background: #f0fdf4;">
+        <div style="font-size: 18px; margin-bottom: 4px;">✅ Eligible for Closure</div>
+        <p style="margin: 0; opacity: 0.8; font-size: 13px; font-weight: 400;">The loan balance is zero. You can now
+            proceed to close or extend this loan.</p>
     </div>
 
-    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 4px;">
-        <a href="{% url 'gold_loan:loan_close_otp' loan.id %}" class="btn-close">
-            Confirm & Close Loan
+    <div class="action-grid-refined"
+        style="margin-top: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <a href="{% url 'gold_loan:loan_close_otp' loan.id %}" class="btn-close"
+            onclick="return confirm('Are you sure you want to proceed with closing this loan? This will initiate the OTP verification process.')"
+            style="margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Confirm & Close
         </a>
 
-        <form action="{% url 'gold_loan:loan_extend_action' loan.id %}" method="get" style="width: 100%;">
+        <form action="{% url 'gold_loan:loan_extend_action' loan.id %}" method="get" style="margin: 0;"
+            onsubmit="return confirm('Are you sure you want to close this loan and start an extension? You will be redirected to create a new loan for this customer.')">
             <input type="hidden" name="from_closure" value="true">
-            <button type="submit" class="btn-extend">
-                Close & Extend Loan
+            <button type="submit" class="btn-extend"
+                style="margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                Close & Extend
             </button>
         </form>
     </div>
     {% else %}
-    <div class="warning-box" style="margin-top: 20px;">
-        Outstanding amount exists. Please complete payment before closing.
+    <div class="warning-box" style="margin-top: 20px; border-style: dashed;">
+        <div style="font-size: 18px; margin-bottom: 4px;">⚠️ Action Required</div>
+        <p style="margin: 0; opacity: 0.8; font-size: 13px; font-weight: 400;">Outstanding amount exists. Please
+            complete payment before closing.</p>
     </div>
 
-    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay">
+    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay"
+        style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
         Go to Payment Page
     </a>
     {% endif %}
 
-    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel">Cancel</a>
+    <div style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+        <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel">Cancel and Go Back</a>
+    </div>
 </div>
 {% endblock %}
