@@ -8,7 +8,19 @@
 {% endblock %}
 
 {% block page_header %}
-<h3>Loan Entry – Step 4: Documents</h3>
+<div style="display: flex; align-items: center; gap: 20px;">
+    <a href="{% url 'gold_loan:loan_entry_step3' %}" class="btn-back-circle"
+        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+        title="Back to Step 3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </a>
+    <h3 style="margin: 0;">Loan Entry – Step 4: Documents</h3>
+</div>
+
 {% endblock %}
 
 {% block content %}
@@ -25,10 +37,10 @@
         <div class="grid-3">
             <select name="document_type[]" required>
                 <option value="">Document Type *</option>
-                <option value="aadhaar" {% if doc.document_type == 'aadhaar' %}selected{% endif %}>Aadhaar</option>
-                <option value="pan" {% if doc.document_type == 'pan' %}selected{% endif %}>PAN</option>
-                <option value="photo" {% if doc.document_type == 'photo' %}selected{% endif %}>Photo</option>
-                <option value="other" {% if doc.document_type == 'other' %}selected{% endif %}>Other</option>
+                <option value="aadhaar" {% if doc.document_type=='aadhaar' %}selected{% endif %}>Aadhaar</option>
+                <option value="pan" {% if doc.document_type=='pan' %}selected{% endif %}>PAN</option>
+                <option value="photo" {% if doc.document_type=='photo' %}selected{% endif %}>Photo</option>
+                <option value="other" {% if doc.document_type=='other' %}selected{% endif %}>Other</option>
             </select>
 
             <input type="text" name="other_document_name[]" value="{{ doc.other_name|default:'' }}"

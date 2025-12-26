@@ -38,7 +38,17 @@
     </form>
 
 
-    <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn-cancel"
-        style="text-decoration: none; display: inline-block; margin-top: 15px;">Back</a>
+    <div style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+        <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn-cancel"
+            style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 0; background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-weight: 700; text-decoration: none; padding: 12px 20px; border-radius: 12px; transition: all 0.2s;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Closure Overview
+        </a>
+    </div>
 </div>
+
 {% endblock %}

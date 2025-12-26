@@ -8,7 +8,19 @@
 {% endblock %}
 
 {% block page_header %}
-<h3>OTP Verification</h3>
+<div style="display: flex; align-items: center; gap: 20px;">
+    <a href="{% url 'gold_loan:loan_entry_step4' %}" class="btn-back-circle"
+        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+        title="Back to Step 4">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </a>
+    <h3 style="margin: 0;">OTP Verification</h3>
+</div>
+
 {% endblock %}
 
 {% block content %}
@@ -18,62 +30,54 @@
     <p>Enter OTP sent to admin and customer</p>
 
     {% if error %}
-        <p style="color:red; font-weight:600;">{{ error }}</p>
+    <p style="color:red; font-weight:600;">{{ error }}</p>
     {% endif %}
 
-    <input
-        type="text"
-        name="otp"
-        id="otpInput"
-        maxlength="6"
-        placeholder="Enter 6-digit OTP"
-        required
-    >
+    <input type="text" name="otp" id="otpInput" maxlength="6" placeholder="Enter 6-digit OTP" required>
 
-    <div class="actions">
-        <button type="submit" class="btn-primary">
+    <div class="actions" style="margin-top: 24px;">
+        <button type="submit" class="btn-primary" style="width: 100%;">
             Verify & Save
         </button>
-
-        <button type="button" class="btn-secondary" id="resendOtp">
+        <button type="button" class="btn-secondary" id="resendOtp" style="width: 100%; margin-top: 12px;">
             Resend OTP
         </button>
     </div>
 </form>
 
 <script>
-/*
- TEMP OTP LOGIC (as requested)
- --------------------------------
- Valid OTP = 123456
- Checked in JS first
- Backend also checks same value
-*/
+    /*
+     TEMP OTP LOGIC (as requested)
+     --------------------------------
+     Valid OTP = 123456
+     Checked in JS first
+     Backend also checks same value
+    */
 
-document.getElementById("otpForm").addEventListener("submit", function (e) {
-    const otp = document.getElementById("otpInput").value;
+    document.getElementById("otpForm").addEventListener("submit", function (e) {
+        const otp = document.getElementById("otpInput").value;
 
-    console.log("Entered OTP:", otp);
+        console.log("Entered OTP:", otp);
 
-    if (otp.length !== 6 || !/^\d+$/.test(otp)) {
-        e.preventDefault();
-        alert("OTP must be exactly 6 digits");
-        return;
-    }
+        if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+            e.preventDefault();
+            alert("OTP must be exactly 6 digits");
+            return;
+        }
 
-    if (otp !== "123456") {
-        e.preventDefault();
-        alert("Invalid OTP (use 123456 for now)");
-        return;
-    }
+        if (otp !== "123456") {
+            e.preventDefault();
+            alert("Invalid OTP (use 123456 for now)");
+            return;
+        }
 
-    console.log("OTP verified successfully");
-    // form submits to Django backend
-});
+        console.log("OTP verified successfully");
+        // form submits to Django backend
+    });
 
-document.getElementById("resendOtp").addEventListener("click", function () {
-    console.log("OTP resent to admin & customer (mock)");
-    alert("OTP resent successfully (check console)");
-});
+    document.getElementById("resendOtp").addEventListener("click", function () {
+        console.log("OTP resent to admin & customer (mock)");
+        alert("OTP resent successfully (check console)");
+    });
 </script>
 {% endblock %}

@@ -12,8 +12,15 @@
     <div class="header-actions"
         style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0;">
         <div>
-            <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn btn-secondary"
-                style="font-size: 13px; padding: 6px 12px;">← Back to Loan View</a>
+            <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-back-circle"
+                style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e2e8f0; color: #64748b; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+                title="Back to Loan View">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
         </div>
         <a href="{% url 'gold_loan:payment_summary_receipt' loan.id %}" target="_blank" class="btn btn-secondary"
             style="color: #2563eb; border-color: #bfdbfe; background: #eff6ff;">
@@ -124,15 +131,7 @@
     <div class="view-action-footer">
         <div class="footer-form-container" style="display: flex; width: 100%; align-items: center; gap: 20px;">
             <div class="footer-left-actions">
-                <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-footer-back"
-                    style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; color: #64748b; font-weight: 700; text-decoration: none; transition: all 0.2s;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Back to Loan
-                </a>
+                <!-- Back button moved to header -->
             </div>
 
             {% if loan.status == 'active' %}

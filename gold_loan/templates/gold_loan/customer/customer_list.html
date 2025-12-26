@@ -8,12 +8,23 @@
     <!-- Page Header & Search Section -->
     <div class="search-section-container" style="margin-bottom: 32px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
-            <div class="header-text">
-                <h3
-                    style="font-size: 32px; font-weight: 900; color: var(--text-primary); margin: 0; letter-spacing: -0.04em;">
-                    Customers</h3>
-                <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 15px; font-weight: 500;">Manage
-                    your customer database and loan histories</p>
+            <div class="header-text" style="display: flex; align-items: flex-start; gap: 20px; flex: 1;">
+                <a href="{% url 'gold_loan:dashboard' %}" class="btn-back-circle"
+                    style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid var(--border-color); color: var(--text-secondary); transition: all 0.2s; margin-top: 4px;"
+                    title="Back to Dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </a>
+                <div>
+                    <h3
+                        style="font-size: 32px; font-weight: 900; color: var(--text-primary); margin: 0; letter-spacing: -0.04em;">
+                        Customers</h3>
+                    <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 15px; font-weight: 500;">
+                        Manage your customer database and loan histories</p>
+                </div>
             </div>
 
             <div class="search-box-wrapper" style="flex: 1; max-width: 550px; min-width: 300px;">
