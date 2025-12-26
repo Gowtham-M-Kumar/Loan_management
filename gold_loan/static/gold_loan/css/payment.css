@@ -1,49 +1,214 @@
-/* Payment Specific Styles */
-.header-actions {
-    margin-bottom: 25px;
+/* ==============================
+   PAYMENT PAGE STYLES
+   (Zoho-Inspired Finance UI)
+============================== */
+
+.view-container {
+    padding-bottom: 120px;
+    /* Space for the fixed action footer */
 }
 
-/* Form Styles */
-.form-group {
-    margin-bottom: 18px;
-}
-
-.form-label {
+/* Single Column Layout for Payment History & Summary */
+.payment-layout {
     display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #4b5563;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
-.form-control {
+/* Card Improvements */
+.section-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 18px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-body {
+    padding: 24px;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.info-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.info-value {
+    font-size: 15px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.info-value-large {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.info-value-warn {
+    font-size: 18px;
+    font-weight: 700;
+    color: #d97706;
+}
+
+.info-value-danger {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--error-text);
+}
+
+/* --- PAYMENT ACTION FOOTER (HORIZONTAL FORM) --- */
+.view-action-footer {
+    height: 100px;
+    /* Slightly taller to accommodate form labels */
+}
+
+.footer-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    /* Slightly rounder */
+}
+
+.footer-info-block {
+    flex: 0 0 250px;
+}
+
+.footer-info-block h4 {
     font-size: 14px;
-    background-color: #f9fafb;
-    /* Light bg */
+    margin-bottom: 4px;
+}
+
+.footer-fields {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.f-input-group {
+    flex: 1;
+}
+
+.f-input-group label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.f-control {
+    height: 40px;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    width: 100%;
+}
+
+.f-control:focus {
+    background: white;
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-record {
+    height: 40px;
+    padding: 0 24px;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
     transition: all 0.2s;
 }
 
-.form-control:focus {
-    background-color: #fff;
-    border-color: #2563eb;
-    outline: none;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+.btn-record:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-/* Specific button variant for payment */
-.btn-payment {
-    background: #059669;
-    color: white;
-    border: 1px solid #047857;
+/* History Table */
+.view-table th {
+    background: #f8fafc;
+    padding: 14px 24px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
 }
 
-.btn-payment:hover {
-    background: #047857;
+.view-table td {
+    padding: 16px 24px;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Alerts */
+.alert-error {
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #991b1b;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .view-action-footer {
+        height: auto;
+        padding: 20px;
+    }
+
+    .footer-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .footer-fields {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .view-container {
+        padding-bottom: 400px;
+    }
 }

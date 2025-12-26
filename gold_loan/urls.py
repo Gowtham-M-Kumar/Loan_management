@@ -4,8 +4,11 @@ from . import views
 app_name = "gold_loan"
 
 urlpatterns = [
+    # Home Page (Landing)
+    path("", views.home, name="home"),
+    
     # Dashboard
-    path("", views.dashboard, name="dashboard"),
+    path("dashboard/", views.dashboard, name="dashboard"),
 
     # Loan Entry (redirect to step 1)
     path("loan/", views.loan_entry, name="loan_entry"),
@@ -25,6 +28,7 @@ urlpatterns = [
     path("extended-loans/", views.extended_loans_list, name="extended_loans_list"),
     path("customers/", views.customer_list, name="customer_list"),
     path("customers/<int:customer_id>/", views.customer_detail, name="customer_detail"),
+    path("customers/<int:customer_id>/edit/", views.customer_edit, name="customer_edit"),
     path("close/", views.loan_close, name="loan_close"),
     
     # API Endpoints

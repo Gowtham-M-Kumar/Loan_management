@@ -30,7 +30,7 @@
 
     {% if can_close %}
     <div class="success-box" style="margin-top: 20px;">
-        ✅ This loan is fully paid and eligible for closure.
+        This loan is fully paid and eligible for closure.
     </div>
 
     <form method="POST">
@@ -42,7 +42,7 @@
     </form>
     {% else %}
     <div class="warning-box" style="margin-top: 20px;">
-        ⚠️ Loan cannot be closed. Outstanding amount exists.
+        Loan cannot be closed. Outstanding amount exists.
     </div>
 
     <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay">

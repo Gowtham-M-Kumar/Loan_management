@@ -114,7 +114,7 @@ class Loan(models.Model):
         (STATUS_CLOSED, "Closed"),
     ]
 
-    lot_number = models.CharField(max_length=20, unique=True)
+    lot_number = models.CharField(max_length=20)
     loan_number = models.CharField(max_length=20, unique=True)
 
     customer = models.ForeignKey(
@@ -224,6 +224,18 @@ class GoldItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} ({self.approved_net_weight}g)"
+
+
+class GoldItemBundle(models.Model):
+    gold_item = models.OneToOneField(
+        GoldItem,
+        on_delete=models.CASCADE,
+        related_name="bundle"
+    )
+    item_count = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.item_count} items for {self.gold_item.item_name}"
 
 
 # =========================
@@ -339,5 +351,65 @@ class LoanExpense(models.Model):
 
     def __str__(self):
         return f"{self.medium}: {self.amount}"
+
+
+# =========================
+# LOAN PLEDGE (Company Data)
+# =========================
+class LoanPledge(models.Model):
+    """
+    Separate model to track company's own pledge of the gold to a bank.
+    Visible only on edit pages, not for customer or general viewing.
+    """
+    loan = models.OneToOneField(
+        Loan,
+        on_delete=models.CASCADE,
+        related_name="pledge"
+    )
+
+    # Bank / Pledge Info
+    bank_name = models.CharField(max_length=200)
+    bank_address = models.TextField()
+    pledge_receipt_no = models.CharField(max_length=100)
+    notes = models.TextField(blank=True, null=True)
+
+    # Gold & Rate Info
+    total_actual_grams = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    total_approved_grams = models.DecimalField(max_digits=10, decimal_places=3, default=0)
+    price_per_gram = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    interest_period = models.CharField(max_length=50, blank=True, null=True) # e.g. Monthly, Yearly
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Pledge for {self.loan.loan_number} at {self.bank_name}"
+
+    @property
+    def total_adjustment_amount(self):
+        """Auto calculated total of all adjustment amounts."""
+        return self.adjustments.aggregate(total=models.Sum('amount'))['total'] or 0
+
+
+class LoanPledgeAdjustment(models.Model):
+    """
+    Dynamic rows for Profit / Adjustment Tracking within a LoanPledge.
+    """
+    pledge = models.ForeignKey(
+        LoanPledge,
+        on_delete=models.CASCADE,
+        related_name="adjustments"
+    )
+
+    date = models.DateField(default=timezone.now)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    medium = models.CharField(max_length=50) # Cash, Online, etc.
+    notes = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.date}: {self.amount} via {self.medium}"
 
 

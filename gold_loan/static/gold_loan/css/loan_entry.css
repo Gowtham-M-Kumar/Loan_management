@@ -1,186 +1,162 @@
-/* ==============================
-   COMMON LAYOUT
-============================== */
-
 .loan-form {
-    max-width: 960px;
-    margin: auto;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
+/* Steps Indicator (Wizard Header) - Optional if exists, styles here */
+
+/* Form Cards */
 .card {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 32px;
+    margin-bottom: 24px;
+    transition: box-shadow var(--transition);
+}
+
+.card:focus-within {
+    box-shadow: var(--shadow-md);
 }
 
 .card h4 {
-    margin-bottom: 15px;
-    font-size: 16px;
-    color: #111827;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.divider {
-    text-align: center;
-    margin: 18px 0;
-    font-weight: 600;
-    color: #6b7280;
-}
-
-/* ==============================
-   GRID SYSTEM
-============================== */
-
+/* Grid Layouts for Forms */
 .grid-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
 }
 
 .grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 24px;
 }
 
-/* ==============================
-   FORM ELEMENTS
-============================== */
-
-input,
-textarea,
-select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    font-size: 14px;
-    background-color: #ffffff;
+/* Form Groups */
+.form-group {
+    margin-bottom: 20px;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-    outline: none;
-    border-color: #2563eb;
-}
-
-textarea {
-    resize: vertical;
-}
-
-/* ==============================
-   FILE UPLOAD
-============================== */
-
+/* File Upload Box (Clean & Dashed) */
 .file-box {
-    display: block;
-    margin-top: 14px;
-    padding: 14px;
-    border: 2px dashed #d1d5db;
-    border-radius: 8px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
     text-align: center;
-    cursor: default; /* Changed from pointer to avoid confusing behavior with buttons inside */
+    background-color: var(--bg-hover);
+    transition: all var(--transition);
+    cursor: pointer;
+    margin-bottom: 16px;
+}
+
+.file-box:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    transform: scale(1.01);
+}
+
+.file-box p {
+    color: var(--text-secondary);
     font-size: 14px;
-    color: #374151;
+    margin-bottom: 12px;
 }
 
-.file-box input {
-    display: none;
-}
-
+/* Media Buttons (Camera/Upload) inside the box */
 .media-buttons {
     display: flex;
     justify-content: center;
     gap: 12px;
-    margin-top: 10px;
-    flex-wrap: wrap;
 }
 
 .btn-media {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    background: #f9fafb;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #374151;
+    transition: all var(--transition-fast);
 }
 
 .btn-media:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-light);
+    transform: translateY(-1px);
 }
 
-.btn-media.camera {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1d4ed8;
-}
-
-.btn-media.camera:hover {
-    background: #dbeafe;
-}
-
-/* ==============================
-   BUTTONS
-============================== */
-
+/* Actions (Next/Back) */
 .actions {
     display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
 }
 
-.btn-primary {
-    background-color: #2563eb;
-    color: #ffffff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
+.actions .btn {
+    min-width: 120px;
 }
 
-.btn-secondary {
-    background-color: #e5e7eb;
-    color: #111827;
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-/* ==============================
-   ADD ROW BUTTON
-============================== */
-
-.add-row {
-    margin-bottom: 20px;
-    display: inline-block;
-}
-
-/* ==============================
-   OTP PAGE
-============================== */
-
+/* OTP Specific */
 .otp-box {
     max-width: 400px;
-    margin: auto;
+    margin: 40px auto;
     text-align: center;
 }
 
 .otp-box input {
+    font-size: 24px;
+    letter-spacing: 0.5em;
     text-align: center;
-    font-size: 20px;
-    letter-spacing: 6px;
-    margin: 20px 0;
+    padding: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    margin-bottom: 24px;
+    transition: all var(--transition-fast);
+    background: var(--bg-hover);
+}
+
+.otp-box input:focus {
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+    background: #ffffff;
+    transform: scale(1.02);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card {
+        padding: 24px 16px;
+    }
+
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .actions .btn {
+        width: 100%;
+    }
 }

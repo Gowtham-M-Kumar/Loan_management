@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
-from decimal import Decimal, DecimalException
+from decimal import Decimal, DecimalException, InvalidOperation
 import os
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -10,7 +11,7 @@ from django.utils import timezone
 from datetime import datetime
 from datetime import timedelta
 from django.db.models import Sum, Count
-from .models import Customer, Loan, GoldItem, GoldItemImage, LoanDocument, Payment, LoanExpense
+from .models import Customer, Loan, GoldItem, GoldItemImage, GoldItemBundle, LoanDocument, Payment, LoanExpense, LoanPledge, LoanPledgeAdjustment
 
 
 def get_loan_session(request):
@@ -349,6 +350,7 @@ def loan_entry_step2(request):
         carats = request.POST.getlist("carat[]")
         gross_weights = request.POST.getlist("gross_weight[]")
         approved_weights = request.POST.getlist("approved_net_weight[]")
+        item_counts = request.POST.getlist("item_count[]")
         descriptions = request.POST.getlist("description[]")
 
         # Ensure temp directory exists
@@ -371,6 +373,7 @@ def loan_entry_step2(request):
                         "carat": int(carats[i]) if carats[i] else None,
                         "gross_weight": gross_weights[i],
                         "approved_net_weight": approved_weights[i],
+                        "item_count": item_counts[i] if i < len(item_counts) else 1,
                         "description": descriptions[i],
                         "images": existing_items[i].get("images", []) if i < len(existing_items) else []
                     })
@@ -388,6 +391,7 @@ def loan_entry_step2(request):
                         "carat": int(carats[i]) if carats[i] else None,
                         "gross_weight": gross_weights[i],
                         "approved_net_weight": approved_weights[i],
+                        "item_count": item_counts[i] if i < len(item_counts) else 1,
                         "description": descriptions[i],
                         "images": existing_items[i].get("images", []) if i < len(existing_items) else []
                     })
@@ -414,6 +418,7 @@ def loan_entry_step2(request):
                         "carat": int(carats[i]) if carats[i] else None,
                         "gross_weight": gross_weights[i],
                         "approved_net_weight": approved_weights[i],
+                        "item_count": item_counts[i] if i < len(item_counts) else 1,
                         "description": descriptions[i],
                         "images": existing_items[i].get("images", []) if i < len(existing_items) else []
                     })
@@ -432,6 +437,7 @@ def loan_entry_step2(request):
                 "carat": int(carats[index]),  # Store as integer for template comparison
                 "gross_weight": gross_weights[index],
                 "approved_net_weight": approved_weights[index],
+                "item_count": int(item_counts[index]) if index < len(item_counts) else 1,
                 "description": descriptions[index],
                 "images": image_paths,
             })
@@ -500,8 +506,26 @@ def loan_entry_step3(request):
                 "loan_data": loan_data
             })
 
+        # Validate Lot Occupancy
+        lot_number = request.POST.get("lot_number", "").strip()
+        occupied = Loan.objects.filter(lot_number=lot_number, status=Loan.STATUS_ACTIVE).exists()
+        
+        if occupied:
+            # Recalculate context for error
+            total_approved_grams_for_context = Decimal("0")
+            items = session.get("items", [])
+            for item in items:
+                try: total_approved_grams_for_context += Decimal(item.get("approved_net_weight", "0"))
+                except: pass
+            
+            return render(request, "gold_loan/loan/step3_loan.html", {
+                "error": f"Lot Number '{lot_number}' is currently occupied by another active loan.",
+                "total_approved_grams": total_approved_grams_for_context,
+                "loan_data": request.POST
+            })
+
         session["loan"] = {
-            "lot_number": request.POST.get("lot_number"),  # User-entered lot number
+            "lot_number": lot_number,
             "interest_rate": request.POST.get("interest_rate"),
             "price_per_gram": str(price_per_gram),
             "approved_grams": str(approved_grams),
@@ -659,7 +683,7 @@ def loan_entry_step5(request):
 
                 loan = Loan.objects.create(
                     customer=customer,
-                    lot_number=Loan.generate_lot_number(),
+                    lot_number=loan_data["lot_number"], # Use chosen lot number
                     loan_number=Loan.generate_loan_number(),
                     interest_rate=loan_data["interest_rate"],
                     price_per_gram=loan_data["price_per_gram"],
@@ -689,6 +713,12 @@ def loan_entry_step5(request):
                         gross_weight=item_data["gross_weight"],
                         approved_net_weight=item_data["approved_net_weight"],
                         description=item_data["description"],
+                    )
+
+                    # Create GoldItemBundle for item count
+                    GoldItemBundle.objects.create(
+                        gold_item=gold_item,
+                        item_count=item_data.get("item_count", 1)
                     )
 
                     # Create images for this item
@@ -787,6 +817,7 @@ def get_customer(request, customer_id):
                 'profession': customer.profession,
                 'nominee_name': customer.nominee_name,
                 'nominee_mobile': customer.nominee_mobile,
+                'photo_url': customer.photo.url if customer.photo else None,
             }
         }
         return JsonResponse(data)
@@ -898,6 +929,14 @@ def loan_view(request, loan_id):
     else:
         next_cap_date = base_date + timedelta(days=365)
 
+    # Fetch Pledge info
+    pledge = getattr(loan, 'pledge', None)
+    adjustments = []
+    total_adjustment_amount = Decimal("0")
+    if pledge:
+        adjustments = pledge.adjustments.all().order_by('date')
+        total_adjustment_amount = sum(a.amount for a in adjustments)
+
     context = {
         "loan": loan,
         "customer": loan.customer,
@@ -906,7 +945,10 @@ def loan_view(request, loan_id):
         "outstanding_principal": outstanding_principal,
         "total_paid": total_paid,
         "payments": loan.payments.all().order_by("-created_at"),
-        "next_cap_date": next_cap_date
+        "next_cap_date": next_cap_date,
+        "pledge": pledge,
+        "adjustments": adjustments,
+        "total_adjustment_amount": total_adjustment_amount,
     }
     return render(request, "gold_loan/loan/loan_view.html", context)
 
@@ -914,17 +956,20 @@ def loan_view(request, loan_id):
 def loan_edit(request, loan_id):
     """
     Edit loan details: bank/pledge info, interest rate, and price per gram.
-    Also manages Internal Amount Tracker (LoanExpense).
+    Manages LoanPledge (Internal Company Data).
     Only available for ACTIVE loans.
     """
     loan = get_object_or_404(
-        Loan.objects.select_related("customer").prefetch_related("items", "expenses"),
+        Loan.objects.select_related("customer").prefetch_related("items", "pledge__adjustments"),
         id=loan_id
     )
     
     # Redirect if loan is closed
     if loan.status == Loan.STATUS_CLOSED:
         return redirect("gold_loan:loan_view", loan_id=loan.id)
+    
+    # Get or create pledge
+    pledge, created = LoanPledge.objects.get_or_create(loan=loan)
     
     error = None
     success = None
@@ -934,84 +979,118 @@ def loan_edit(request, loan_id):
 
         try:
             if action == "update_loan":
-                # Bank/Pledge Details
-                bank_name = request.POST.get("bank_name", "").strip()
-                bank_address = request.POST.get("bank_address", "").strip()
-                pledge_receipt_no = request.POST.get("pledge_receipt_no", "").strip()
-                pledge_notes = request.POST.get("pledge_notes", "").strip()
+                # Loan Configuration (Customer-facing/Accounting)
+                # Only update if fields are present in POST (they might be commented out in UI)
+                new_interest_rate = request.POST.get("interest_rate")
+                new_price_per_gram = request.POST.get("price_per_gram")
                 
-                # Loan Configuration
-                interest_rate = Decimal(request.POST.get("interest_rate"))
-                price_per_gram = Decimal(request.POST.get("price_per_gram"))
+                if new_interest_rate is not None and new_price_per_gram is not None:
+                    try:
+                        interest_rate = Decimal(new_interest_rate)
+                        price_per_gram = Decimal(new_price_per_gram)
+                        
+                        if interest_rate < 0:
+                            error = "Interest rate cannot be negative"
+                        elif price_per_gram <= 0:
+                            error = "Price per gram must be positive"
+                        else:
+                            loan.interest_rate = interest_rate
+                            loan.price_per_gram = price_per_gram
+                            loan.total_amount = loan.approved_grams * price_per_gram
+                            loan.save()
+                    except (InvalidOperation, DecimalException):
+                        error = "Invalid numeric values for loan configuration"
                 
-                # Validation
-                if interest_rate < 0:
-                    error = "Interest rate cannot be negative"
-                elif price_per_gram <= 0:
-                    error = "Price per gram must be positive"
-                else:
-                    # Update loan
-                    loan.bank_name = bank_name if bank_name else None
-                    loan.bank_address = bank_address if bank_address else None
-                    loan.pledge_receipt_no = pledge_receipt_no if pledge_receipt_no else None
-                    loan.pledge_notes = pledge_notes if pledge_notes else None
-                    loan.interest_rate = interest_rate
-                    loan.price_per_gram = price_per_gram
+                if not error:
+                    # Update LoanPledge (Internal)
+                    bank_name = request.POST.get("bank_name", "").strip()
+                    bank_address = request.POST.get("bank_address", "").strip()
+                    pledge_receipt_no = request.POST.get("pledge_receipt_no", "").strip()
                     
-                    # Recalculate total amount based on new price per gram
-                    loan.total_amount = loan.approved_grams * price_per_gram
-                    
-                    loan.save()
-                    success = "Loan details updated successfully"
+                    if not bank_name or not bank_address or not pledge_receipt_no:
+                        error = "Bank Name, Address, and Pledge Receipt No are required for the pledge."
+                    else:
+                        with transaction.atomic():
+                            # Save any loan changes if any happened above (already saved but transaction.atomic is good)
+                            loan.save()
+                            
+                            # Update LoanPledge (Internal)
+                            pledge.bank_name = bank_name
+                            pledge.bank_address = bank_address
+                            pledge.pledge_receipt_no = pledge_receipt_no
+                            pledge.notes = request.POST.get("pledge_notes", "").strip()
+                            
+                            def get_decimal(val):
+                                if not val or val.strip() == "":
+                                    return Decimal("0")
+                                return Decimal(val)
 
-            elif action == "add_expense":
-                amount = Decimal(request.POST.get("amount"))
-                medium = request.POST.get("medium", "").strip()
-                notes = request.POST.get("notes", "").strip()
-                date_str = request.POST.get("date")
-                
-                if amount <= 0:
-                    error = "Expense amount must be positive"
-                elif not medium:
-                    error = "Medium (e.g. Cash) is required"
-                else:
-                    expense = LoanExpense(
-                        loan=loan,
-                        amount=amount,
-                        medium=medium,
-                        notes=notes
-                    )
-                    if date_str:
-                        expense.date = date_str  # Django handles string -> date if format YYYY-MM-DD
-                    
-                    expense.save()
-                    success = "Expense added successfully"
-            
-            elif action == "delete_expense":
-                expense_id = request.POST.get("expense_id")
-                expense = get_object_or_404(LoanExpense, id=expense_id, loan=loan)
-                expense.delete()
-                success = "Expense removed successfully"
-                
-        except (ValueError, DecimalException):
-            error = "Invalid numeric values provided"
+                            pledge.total_actual_grams = get_decimal(request.POST.get("total_actual_grams"))
+                            pledge.total_approved_grams = get_decimal(request.POST.get("total_approved_grams"))
+                            pledge.price_per_gram = get_decimal(request.POST.get("pledge_price_per_gram"))
+                            pledge.interest_rate = get_decimal(request.POST.get("pledge_interest_rate"))
+                            pledge.interest_period = request.POST.get("interest_period", "").strip()
+                            
+                            pledge.save()
+
+                        # Handle Dynamic Rows for Adjustments
+                        # We'll clear and recreate or update. For simplicity with dynamic rows, 
+                        # usually we check for IDs or clear and recreate if small.
+                        # But professional design: let's match the rows.
+                        
+                        # Get data from lists
+                        adj_dates = request.POST.getlist("adj_date[]")
+                        adj_amounts = request.POST.getlist("adj_amount[]")
+                        adj_mediums = request.POST.getlist("adj_medium[]")
+                        adj_notes = request.POST.getlist("adj_notes[]")
+                        
+                        # Clear existing adjustments and recreate
+                        pledge.adjustments.all().delete()
+                        for i in range(len(adj_amounts)):
+                            if adj_amounts[i] and Decimal(adj_amounts[i]) != 0:
+                                LoanPledgeAdjustment.objects.create(
+                                    pledge=pledge,
+                                    date=adj_dates[i] if adj_dates[i] else timezone.now().date(),
+                                    amount=Decimal(adj_amounts[i]),
+                                    medium=adj_mediums[i],
+                                    notes=adj_notes[i]
+                                )
+                        
+                        success = "Loan and Pledge details updated successfully"
+
+                        # Update Gold Item Counts
+                        item_ids = request.POST.getlist("item_id[]")
+                        item_counts = request.POST.getlist("item_count[]")
+                        for i in range(len(item_ids)):
+                            if i < len(item_counts):
+                                GoldItemBundle.objects.update_or_create(
+                                    gold_item_id=item_ids[i],
+                                    defaults={
+                                        'item_count': int(item_counts[i])
+                                    }
+                                )
+
+        except (ValueError, DecimalException) as e:
+            error = f"Invalid numeric values provided: {str(e)}"
         except Exception as e:
             error = f"Error: {str(e)}"
     
     # Calculate totals for display
     total_actual_grams = loan.items.aggregate(total=Sum('gross_weight'))['total'] or Decimal('0')
     total_approved_grams = loan.approved_grams
-    expenses = loan.expenses.all().order_by('created_at')
-    total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+    
+    adjustments = pledge.adjustments.all().order_by('date')
+    total_adjustment_amount = sum(a.amount for a in adjustments)
     
     context = {
         "loan": loan,
         "customer": loan.customer,
         "items": loan.items.all(),
-        "expenses": expenses,
+        "pledge": pledge,
+        "adjustments": adjustments,
         "total_actual_grams": total_actual_grams,
         "total_approved_grams": total_approved_grams,
-        "total_expenses": total_expenses,
+        "total_adjustment_amount": total_adjustment_amount,
         "error": error,
         "success": success
     }
@@ -1294,12 +1373,14 @@ def loan_receipt(request, loan_id):
     # Calculate item totals
     total_items = loan.items.count()
     total_weight = loan.items.aggregate(total=Sum('approved_net_weight'))['total'] or 0
+    total_pieces = sum(item.bundle.item_count for item in loan.items.all() if hasattr(item, 'bundle'))
 
     context = {
         "loan": loan,
         "customer": loan.customer,
         "items": loan.items.all(),
         "total_items": total_items,
+        "total_pieces": total_pieces,
         "total_weight": total_weight,
         "now": timezone.now()
     }
@@ -1432,4 +1513,53 @@ def customer_detail(request, customer_id):
     return render(request, "gold_loan/customer/customer_detail.html", context)
 
 
+def customer_edit(request, customer_id):
+    """
+    Edit existing customer details.
+    """
+    customer = get_object_or_404(Customer, id=customer_id)
+    error = None
+
+    if request.method == "POST":
+        # Capture data so we can re-populate on error if needed
+        # But for simple fields without complex validation other than required, 
+        # let's just use the object.
+        try:
+            name = request.POST.get("name")
+            mobile_secondary = request.POST.get("mobile_secondary", "")
+            email = request.POST.get("email", "")
+            address = request.POST.get("address")
+            profession = request.POST.get("profession")
+            nominee_name = request.POST.get("nominee_name")
+            nominee_mobile = request.POST.get("nominee_mobile")
+
+            # Update fields
+            customer.name = name
+            customer.mobile_secondary = mobile_secondary
+            customer.email = email
+            customer.address = address
+            customer.profession = profession
+            customer.nominee_name = nominee_name
+            customer.nominee_mobile = nominee_mobile
+
+            # Validation (simple manual check for required fields)
+            if not all([name, address, profession, nominee_name, nominee_mobile]):
+                raise ValueError("All mandatory fields (*) must be filled.")
+
+            # Handle photo upload
+            photo = request.FILES.get("photo")
+            if photo:
+                customer.photo = photo
+
+            customer.save()
+            messages.success(request, "Customer details updated successfully.")
+            return redirect("gold_loan:customer_detail", customer_id=customer.id)
+
+        except Exception as e:
+            error = str(e)
+
+    return render(request, "gold_loan/customer/customer_edit.html", {
+        "customer": customer,
+        "error": error
+    })
 

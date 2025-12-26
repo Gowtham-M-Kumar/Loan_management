@@ -1,10 +1,11 @@
 .close-container {
     max-width: 600px;
     margin: 40px auto;
-    background: #fff;
+    background: var(--bg-card);
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
 .close-header {
@@ -15,25 +16,27 @@
 }
 
 .warning-box {
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
-    color: #991b1b;
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
     padding: 15px;
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     margin-bottom: 20px;
     text-align: center;
     font-weight: 500;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .success-box {
-    background: #dcfce7;
-    border: 1px solid #86efac;
-    color: #166534;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-text);
     padding: 15px;
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     margin-bottom: 20px;
     text-align: center;
     font-weight: 500;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .balance-row {
@@ -60,31 +63,37 @@
     width: 100%;
     padding: 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     margin-top: 20px;
+    transition: all var(--transition-fast);
 }
 
 .btn-close:hover {
     background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-pay {
     display: block;
-    background: #2563eb;
+    background: var(--primary);
     color: white;
     text-align: center;
     text-decoration: none;
     padding: 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-weight: bold;
     margin-top: 20px;
+    transition: all var(--transition-fast);
 }
 
 .btn-pay:hover {
-    background: #1d4ed8;
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-cancel {

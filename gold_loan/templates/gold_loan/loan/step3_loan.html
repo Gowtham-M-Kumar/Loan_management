@@ -15,12 +15,23 @@
 <form method="post" class="loan-form">
     {% csrf_token %}
 
+    {% if error %}
+    <div class="alert alert-error"
+        style="margin-bottom: 20px; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 8px; border: 1px solid #fecaca;">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <!-- LOAN IDENTIFIERS -->
     <div class="card">
         <h4>Loan Identification</h4>
         <div class="grid-2">
-            <input type="text" name="lot_number" value="{{ loan_data.lot_number|default:'' }}"
-                placeholder="Lot Number *" required>
+            <div>
+                <input type="text" name="lot_number" value="{{ loan_data.lot_number|default:'' }}"
+                    placeholder="Lot Number *" required>
+                <small style="color: #6b7280; display: block; margin-top: 4px;">Enter a free lot number (not occupied by
+                    an active loan).</small>
+            </div>
             <input type="text" placeholder="Loan Number (Auto-generated)" readonly style="background-color: #f3f4f6;">
         </div>
     </div>
@@ -47,11 +58,11 @@
         </div>
 
         <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">
-            ℹ️ Approved Grams is automatically calculated from Step 2 items (Total: {{ total_approved_grams }} grams)
+            Approved Grams is automatically calculated from Step 2 items (Total: {{ total_approved_grams }} grams)
         </p>
 
         <p style="margin-top: 10px; color: #059669; font-size: 14px; font-weight: 500;">
-            💡 Bank/Pledge details can be added later via the Loan Edit page
+            Bank/Pledge details can be added later via the Loan Edit page
         </p>
     </div>
 

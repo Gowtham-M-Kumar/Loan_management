@@ -66,40 +66,75 @@
         </div>
 
         <div class="file-box">
-            <span style="font-weight: 500; display:block; margin-bottom:8px;">Customer Photo</span>
+            <span style="font-weight: 500; display:block; margin-bottom:8px;">
+    Customer Photo
+</span>
 
-            <div class="media-buttons">
-                <!-- Camera Button -->
-                <button type="button" class="btn-media camera open-camera" data-target="customerPhoto">
-                    <span>📷</span> Take Photo
-                </button>
+<div class="media-buttons">
+    <!-- Camera Button -->
+    <button type="button" class="btn-media camera open-camera" data-target="customerPhoto">
+        Take Photo
+    </button>
 
-                <!-- Upload Button -->
-                <button type="button" class="btn-media" onclick="document.getElementById('customerPhoto').click()">
-                    <span>📂</span> Upload from Device
-                </button>
-            </div>
+    <!-- Upload Button -->
+    <button type="button" class="btn-media"
+            onclick="document.getElementById('customerPhoto').click()">
+        Upload from Device
+    </button>
+</div>
 
-            <input type="file" name="customer_photo" accept="image/*" capture="user" id="customerPhoto"
-                onchange="previewCustomerPhoto(event)" style="display:none;" {% if not customer_photo %}required{% endif %}>
+<!-- File Input -->
+{% if customer_photo %}
+<input type="file"
+       name="customer_photo"
+       accept="image/*"
+       capture="user"
+       id="customerPhoto"
+       onchange="previewCustomerPhoto(event)"
+       style="display:none;">
+{% else %}
+<input type="file"
+       name="customer_photo"
+       accept="image/*"
+       capture="user"
+       id="customerPhoto"
+       onchange="previewCustomerPhoto(event)"
+       style="display:none;"
+       required>
+{% endif %}
+
+<!-- Image Preview -->
+{% if customer_photo %}
+<div id="photoPreview" style="margin-top: 20px; text-align: center;">
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+        Preview:
+    </p>
+    <img id="photoPreviewImg"
+         src="{{ MEDIA_URL }}{{ customer_photo }}"
+         style="max-width: 200px;
+                max-height: 200px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                box-shadow: var(--shadow-sm);">
+</div>
+{% else %}
+<div id="photoPreview"
+     style="margin-top: 20px; text-align: center; display: none;">
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+        Preview:
+    </p>
+    <img id="photoPreviewImg"
+         src=""
+         style="max-width: 200px;
+                max-height: 200px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                box-shadow: var(--shadow-sm);">
+</div>
+{% endif %}
+
+
         </div>
-
-        <!-- Image Preview -->
-        {% if customer_photo %}
-        <div id="photoPreview" style="margin-top: 10px;">
-            <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
-            <img id="photoPreviewImg"
-                src="{{ MEDIA_URL }}{{ customer_photo }}"
-                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
-        </div>
-        {% else %}
-        <div id="photoPreview" style="margin-top: 10px; display: none;">
-            <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
-            <img id="photoPreviewImg"
-                src=""
-                style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
-        </div>
-        {% endif %}
 
     </div>
 
@@ -107,6 +142,7 @@
         <button type="submit" class="btn-primary">Next →</button>
     </div>
 </form>
+
 
 {% endblock %}
 
@@ -164,7 +200,7 @@
                     <div>
                         <div style="font-weight: 600; font-size: 15px; color: #111;">${customer.name}</div>
                         <div style="font-size: 13px; color: #666;">
-                            ID: ${customer.customer_id} | 📞 ${customer.mobile_primary}
+                            ID: ${customer.customer_id} | ${customer.mobile_primary}
                         </div>
                     </div>
                 </div>
@@ -185,7 +221,7 @@
                     document.getElementById('customerSearch').value = '';
                     document.getElementById('searchResults').innerHTML =
                         `<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;">
-                            <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Customer selected: ${data.customer.name}</p>
+                            <p style="color: #16a34a; font-weight: 600; margin: 0;">Customer selected: ${data.customer.name}</p>
                             <button type="button" onclick="deselectCustomer()" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">✕ Deselect</button>
                         </div>`;
                 }
@@ -246,6 +282,20 @@
             const el = document.querySelector(`[name="${field}"]`);
             if (el) el.value = customer[field] || '';
         });
+
+        // Show photo preview if available
+        const preview = document.getElementById('photoPreview');
+        const img = document.getElementById('photoPreviewImg');
+        const photoInput = document.getElementById('customerPhoto');
+
+        if (customer.photo_url) {
+            img.src = customer.photo_url;
+            preview.style.display = 'block';
+            if (photoInput) photoInput.removeAttribute('required');
+        } else {
+            img.src = '';
+            preview.style.display = 'none';
+        }
 
         // Make fields readonly
         const inputs = document.querySelectorAll('.card input, .card textarea');

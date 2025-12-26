@@ -1,0 +1,232 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Edit Customer – {{ customer.customer_id }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_view.css' %}">
+<style>
+    .edit-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .section-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 24px;
+    }
+
+    .section-card h3 {
+        margin: 0 0 20px;
+        font-size: 18px;
+        color: #111827;
+        font-weight: 700;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .field-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .field-group {
+        margin-bottom: 16px;
+    }
+
+    .field-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 6px;
+    }
+
+    .field-group input,
+    .field-group textarea,
+    .field-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .readonly-field {
+        background: #f3f4f6 !important;
+        color: #6b7280 !important;
+        cursor: not-allowed;
+    }
+
+    .photo-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 10px;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        border: none;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block page_header %}
+<h3>Edit Customer: {{ customer.name }} ({{ customer.customer_id }})</h3>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    {% if error %}
+    <div
+        style="background: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #fee2e2;">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="section-card">
+            <h3>Identity Details (Read-only)</h3>
+            <div class="field-grid-2">
+                <div class="field-group">
+                    <label>Customer ID</label>
+                    <input type="text" value="{{ customer.customer_id }}" class="readonly-field" readonly>
+                </div>
+                <div class="field-group">
+                    <label>Primary Mobile</label>
+                    <input type="text" value="{{ customer.mobile_primary }}" class="readonly-field" readonly>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>Aadhaar Number</label>
+                <input type="text" value="{{ customer.aadhaar_number }}" class="readonly-field" readonly>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Personal & Contact Info</h3>
+            <div class="field-grid-2">
+                <div class="field-group">
+                    <label>Full Name *</label>
+                    <input type="text" name="name" value="{{ customer.name }}" required>
+                </div>
+                <div class="field-group">
+                    <label>Alternate Mobile</label>
+                    <input type="text" name="mobile_secondary" value="{{ customer.mobile_secondary }}">
+                </div>
+            </div>
+            <div class="field-grid-2">
+                <div class="field-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" value="{{ customer.email }}">
+                </div>
+                <div class="field-group">
+                    <label>Profession *</label>
+                    <input type="text" name="profession" value="{{ customer.profession }}" required>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>Full Address *</label>
+                <textarea name="address" rows="3" required>{{ customer.address }}</textarea>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Nominee Details</h3>
+            <div class="field-grid-2">
+                <div class="field-group">
+                    <label>Nominee Name *</label>
+                    <input type="text" name="nominee_name" value="{{ customer.nominee_name }}" required>
+                </div>
+                <div class="field-group">
+                    <label>Nominee Mobile *</label>
+                    <input type="text" name="nominee_mobile" value="{{ customer.nominee_mobile }}" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h3>Customer Photo</h3>
+            <div class="photo-preview">
+                {% if customer.photo %}
+                <img id="photo-preview-img" src="{{ customer.photo.url }}" alt="Customer Photo">
+                {% else %}
+                <div
+                    style="height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #9ca3af;">
+                    👤</div>
+                {% endif %}
+            </div>
+            <div class="field-group">
+                <label>Change Photo</label>
+                <input type="file" name="photo" accept="image/*" onchange="previewImage(this)">
+                <small style="color: #6b7280; display: block; margin-top: 4px;">Leave blank to keep existing
+                    photo.</small>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'gold_loan:customer_detail' customer.id %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var preview = document.getElementById('photo-preview-img');
+                if (!preview) {
+                    var container = document.querySelector('.photo-preview');
+                    container.innerHTML = '<img id="photo-preview-img" src="">';
+                    preview = document.getElementById('photo-preview-img');
+                }
+                preview.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

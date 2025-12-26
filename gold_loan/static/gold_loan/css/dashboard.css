@@ -1,187 +1,279 @@
-.quick-actions {
-    margin-bottom: 25px;
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+/* ==============================
+   PUNNAGAI GOLD LOAN - DASHBOARD REFINED
+   (Enterprise-grade UI)
+   ============================== */
+
+/* --- Page Structure --- */
+.dashboard-wrapper {
+    animation: fadeInPage 0.4s ease-out;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
+@keyframes fadeInPage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
-    border-radius: 6px;
-    text-decoration: none;
+.dash-page-header {
+    margin-bottom: 0px;
+    padding-top: 8px;
+}
+
+.dash-page-header h3 {
+    font-size: 32px;
+    /* Prominent size */
+    font-weight: 900;
+    /* Extra bold */
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.04em;
+    /* Tight tracking for modern feel */
+}
+
+.dash-page-header .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
     font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* --- Content Card --- */
+.loan-list-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.list-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fcfcfd;
+}
+
+/* --- Filter Bar (Segmented Control) --- */
+.filter-bar-segmented {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 14px;
+    gap: 6px;
+}
+
+.segment-item {
+    padding: 10px 24px;
+    /* More substantial tap target */
     font-size: 14px;
-    transition: background-color 0.2s;
-    border: 1px solid transparent;
-    cursor: pointer;
+    /* Increased readability */
+    font-weight: 700;
+    /* Solid weight */
+    color: var(--text-secondary);
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.02em;
 }
 
-.btn-primary {
-    background-color: #2563eb;
-    color: white;
+.segment-item:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.5);
 }
 
-.btn-primary:hover {
-    background-color: #1d4ed8;
+.segment-item.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.btn-secondary {
-    background-color: #f3f4f6;
-    color: #374151;
-    border-color: #d1d5db;
-}
-
-.btn-secondary:hover {
-    background-color: #e5e7eb;
-}
-
-/* Loan List & Table */
-.loan-list {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.section-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #111827;
-    margin-top: 0;
+/* --- Table Styles --- */
+.loan-table-container {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .loan-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
-}
-
-.loan-table th,
-.loan-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+    min-width: 900px;
 }
 
 .loan-table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #4b5563;
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 10;
+    padding: 14px 24px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .loan-table th a {
-    color: #4b5563;
+    color: inherit;
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
-.loan-table th a:hover {
-    color: #111827;
+.sort-icon {
+    font-size: 14px;
+    opacity: 0.5;
 }
 
-.loan-table tr:last-child td {
-    border-bottom: none;
+.loan-table td {
+    padding: 18px 24px;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
 }
 
-.loan-table tr:hover {
-    background-color: #f9fafb;
+.animate-row {
+    opacity: 0;
+    animation: fadeInRow 0.4s ease forwards;
+    animation-delay: calc(var(--row-index) * 0.05s);
 }
 
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
 
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
-.btn-sm {
-    padding: 6px 12px;
+.loan-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* --- Cell Typography --- */
+.id-text {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.muted-id {
+    color: var(--text-muted);
     font-size: 12px;
-    background-color: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    color: #374151;
-    text-decoration: none;
 }
 
-.btn-sm:hover {
-    background-color: #f9fafb;
-    border-color: #9ca3af;
-}
-
-.parent-link {
-    font-size: 11px;
-    color: #6b7280;
-    display: block;
-    margin-top: 2px;
-    text-decoration: none;
-}
-
-.parent-link:hover {
-    color: #2563eb;
-    text-decoration: underline;
-}
-
-.status-badge-closed {
-    background: #fef2f2;
-    color: #991b1b;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
+.name-text {
     font-weight: 600;
-    border: 1px solid #fee2e2;
 }
 
-.status-badge-extended {
-    background: #eff6ff;
-    color: #1e40af;
-    padding: 2px 8px;
-    border-radius: 4px;
+.amount-text {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.date-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* --- Status Badges (Refined) --- */
+[class^="status-badge-"] {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
     font-size: 11px;
-    font-weight: 600;
-    border: 1px solid #dbeafe;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .status-badge-active {
-    background: #ecfdf5;
-    color: #047857;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    border: 1px solid #d1fae5;
+    background: #dcfce7;
+    color: #15803d;
 }
 
-.filter-bar {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 15px;
+.status-badge-closed {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-badge-extended {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+/* --- Action Button --- */
+.btn-view {
+    display: inline-flex;
     align-items: center;
-    border-bottom: 1px solid #f3f4f6;
-    padding-bottom: 15px;
-}
-
-.filter-link {
+    gap: 6px;
+    padding: 8px 16px;
+    background: #eff6ff;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-pill);
     text-decoration: none;
-    color: #6b7280;
-    font-size: 14px;
-    font-weight: 500;
-    padding-bottom: 2px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
 }
 
-.filter-link:hover {
-    color: #111827;
+.btn-view:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(2px);
 }
 
-.filter-link.active {
-    color: #2563eb;
-    border-bottom: 2px solid #2563eb;
+/* --- Empty State --- */
+.empty-state {
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+
+    .loan-table th:nth-child(2),
+    .loan-table td:nth-child(2) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .list-header {
+        overflow-x: auto;
+    }
+
+    .dash-page-header h3 {
+        font-size: 20px;
+    }
 }

@@ -41,12 +41,12 @@
                 <div class="media-buttons" style="gap:6px;">
                     <button type="button" class="btn-media camera open-camera"
                         data-target="document_image_{{ forloop.counter0 }}" style="padding:6px 10px; font-size:12px;">
-                        📷 Camera
+                        Camera
                     </button>
                     <button type="button" class="btn-media btn-upload"
                         onclick="document.getElementById('document_image_{{ forloop.counter0 }}').click()"
                         style="padding:6px 10px; font-size:12px;">
-                        📂 Upload
+                        Upload
                     </button>
                 </div>
 
@@ -75,7 +75,7 @@
 
             <!-- DELETE BUTTON -->
             <button type="button" class="btn-secondary">
-                ❌ Remove Document
+                Remove Document
             </button>
         </div>
         {% endfor %}
@@ -124,19 +124,19 @@
 
             <!-- DELETE BUTTON -->
             <button type="button" class="btn-secondary">
-                ❌ Remove Document
+                Remove Document
             </button>
         </div>
         {% endif %}
 
         <!-- ADD DOCUMENT -->
         <button type="button" class="btn-secondary add-row">
-            ➕ Add Another Document
+            Add Another Document
         </button>
 
         <!-- NOTE -->
         <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">
-            ⚠️ At least one document is required to proceed.
+            At least one document is required to proceed.
         </p>
 
         <!-- ACTIONS -->
@@ -202,7 +202,7 @@
                 } else {
                     const info = document.createElement('div');
                     info.style.cssText = 'padding: 10px; background: #f3f4f6; border-radius: 4px; border: 2px solid #e5e7eb; min-width: 150px;';
-                    info.innerHTML = `<p style="margin: 0; font-weight: 600; font-size: 12px;">📄 ${file.name}</p>`;
+                    info.innerHTML = `<p style="margin: 0; font-weight: 600; font-size: 12px;">${file.name}</p>`;
                     wrapper.prepend(info);
                 }
 

@@ -94,6 +94,7 @@
                     <th>Carat</th>
                     <th>Gross Wt (g)</th>
                     <th>Net Wt (g)</th>
+                    <th>Pieces</th>
                     <th>Description</th>
                 </tr>
             </thead>
@@ -105,13 +106,14 @@
                     <td>{{ item.get_carat_display }}</td>
                     <td>{{ item.gross_weight }}</td>
                     <td>{{ item.approved_net_weight }}</td>
+                    <td>{{ item.bundle.item_count|default:"1" }}</td>
                     <td>{{ item.description }}</td>
                 </tr>
                 {% endfor %}
                 <tr style="background: #f9f9f9; font-weight: bold;">
                     <td colspan="4" style="text-align: right;">Total Net Weight:</td>
                     <td>{{ total_weight }}g</td>
-                    <td>{{ total_items }} Items</td>
+                    <td>{{ total_pieces }} Pieces</td>
                 </tr>
             </tbody>
         </table>

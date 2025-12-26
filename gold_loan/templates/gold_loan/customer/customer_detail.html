@@ -10,8 +10,13 @@
 {% block page_header %}
 <div style="display: flex; align-items: center; justify-content: space-between;">
     <h3>Customer Details</h3>
-    <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
-        style="font-size: 14px; padding: 6px 12px;">← Back to Customers</a>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="{% url 'gold_loan:customer_edit' customer.id %}" class="btn btn-primary"
+            style="font-size: 14px; padding: 6px 12px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">✎
+            Edit Customer</a>
+        <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
+            style="font-size: 14px; padding: 6px 12px;">← Back to Customers</a>
+    </div>
 </div>
 {% endblock %}
 

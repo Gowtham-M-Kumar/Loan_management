@@ -25,7 +25,7 @@
         <!-- GOLD ITEM (Existing) -->
         <div class="card gold-item" data-index="{{ forloop.counter0 }}"
             data-img-count="{{ item.images|length|default:0 }}">
-            <h4>Gold Item</h4>
+            <h4 class="item-header">Gold Item #{{ forloop.counter }}</h4>
 
             <div class="grid-3">
                 <input type="text" name="item_name[]" value="{{ item.item_name }}" placeholder="Item Name *" required>
@@ -46,8 +46,8 @@
             <div class="grid-2">
                 <input type="number" step="0.001" name="approved_net_weight[]" value="{{ item.approved_net_weight }}"
                     placeholder="Approved Net Weight (g) *" required>
-                <input type="text" value="{{ forloop.counter }}" readonly class="item-count-display"
-                    style="text-align: center; font-weight: bold;">
+                <input type="number" name="item_count[]" value="{{ item.item_count }}"
+                    placeholder="Item Count (Pieces) *" required min="1">
             </div>
 
             <textarea name="description[]" placeholder="Description (optional)">{{ item.description }}</textarea>
@@ -93,14 +93,14 @@
                 </div>
 
                 <button type="button" class="btn-secondary remove-item">
-                    ❌ Remove Item
+                    Remove Item
                 </button>
             </div>
             {% endfor %}
             {% else %}
             <!-- GOLD ITEM (Default Empty) -->
             <div class="card gold-item" data-index="0">
-                <h4>Gold Item</h4>
+                <h4 class="item-header">Gold Item #1</h4>
 
                 <div class="grid-3">
                     <input type="text" name="item_name[]" placeholder="Item Name *" required>
@@ -119,8 +119,7 @@
                 <div class="grid-2">
                     <input type="number" step="0.001" name="approved_net_weight[]"
                         placeholder="Approved Net Weight (g) *" required>
-                    <input type="text" value="1" readonly class="item-count-display"
-                        style="text-align: center; font-weight: bold;">
+                    <input type="number" name="item_count[]" placeholder="Item Count (Pieces) *" required min="1">
                 </div>
 
                 <textarea name="description[]" placeholder="Description (optional)"></textarea>
@@ -151,14 +150,14 @@
                 </div>
 
                 <button type="button" class="btn-secondary remove-item">
-                    ❌ Remove Item
+                    Remove Item
                 </button>
             </div>
             {% endif %}
         </div>
 
         <button type="button" class="btn-secondary" id="addItem">
-            ➕ Add Another Item
+            Add Another Item
         </button>
 
         <div class="actions">
@@ -256,9 +255,9 @@
     function updateItemNumbers() {
         const items = document.querySelectorAll(".gold-item");
         items.forEach((item, index) => {
-            const countInput = item.querySelector(".item-count-display");
-            if (countInput) {
-                countInput.value = index + 1;
+            const header = item.querySelector(".item-header");
+            if (header) {
+                header.innerText = `Gold Item #${index + 1}`;
             }
         });
     }
@@ -277,7 +276,7 @@
             const err = document.createElement("div");
             err.className = "weight-error";
             err.style.cssText = "color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;";
-            err.innerText = "❌ Approved Net Weight cannot exceed Gross Weight.";
+            err.innerText = "Approved Net Weight cannot exceed Gross Weight.";
             netInput.parentNode.appendChild(err);
             netInput.style.borderColor = "#dc2626";
             return false;
@@ -359,7 +358,9 @@
 
         // Clear all text inputs and textareas
         clone.querySelectorAll("input[type='text'], input[type='number'], textarea").forEach(el => {
-            if (!el.hasAttribute("readonly")) el.value = "";
+            if (!el.hasAttribute("readonly")) {
+                el.value = "";
+            }
         });
         // Reset select
         clone.querySelector("select").selectedIndex = 0;

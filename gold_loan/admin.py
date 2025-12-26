@@ -4,9 +4,12 @@ from .models import (
     Loan,
     GoldItem,
     GoldItemImage,
+    GoldItemBundle,
     LoanDocument,
     Payment,
-    LoanExpense
+    LoanExpense,
+    LoanPledge,
+    LoanPledgeAdjustment
 )
 
 # =========================
@@ -23,6 +26,11 @@ class GoldItemInline(admin.TabularInline):
     extra = 0
 
 
+class GoldItemBundleInline(admin.TabularInline):
+    model = GoldItemBundle
+    extra = 1
+
+
 class LoanDocumentInline(admin.TabularInline):
     model = LoanDocument
     extra = 0
@@ -36,6 +44,16 @@ class PaymentInline(admin.TabularInline):
 
 class LoanExpenseInline(admin.TabularInline):
     model = LoanExpense
+    extra = 0
+
+
+class LoanPledgeAdjustmentInline(admin.TabularInline):
+    model = LoanPledgeAdjustment
+    extra = 0
+
+
+class LoanPledgeInline(admin.StackedInline):
+    model = LoanPledge
     extra = 0
 
 
@@ -121,6 +139,7 @@ class LoanAdmin(admin.ModelAdmin):
         LoanDocumentInline,
         PaymentInline,
         LoanExpenseInline,
+        LoanPledgeInline,
     ]
 
 
@@ -140,7 +159,7 @@ class GoldItemAdmin(admin.ModelAdmin):
 
     list_filter = ("carat",)
 
-    inlines = [GoldItemImageInline]
+    inlines = [GoldItemImageInline, GoldItemBundleInline]
 
 
 # =========================
@@ -192,3 +211,9 @@ class LoanExpenseAdmin(admin.ModelAdmin):
     list_filter = ("date", "medium")
     search_fields = ("loan__loan_number", "notes")
     ordering = ("-created_at",)
+
+
+@admin.register(LoanPledge)
+class LoanPledgeAdmin(admin.ModelAdmin):
+    list_display = ("loan", "bank_name", "pledge_receipt_no", "interest_rate")
+    inlines = [LoanPledgeAdjustmentInline]

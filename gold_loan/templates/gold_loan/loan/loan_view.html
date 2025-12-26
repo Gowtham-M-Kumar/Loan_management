@@ -27,17 +27,17 @@
             <a href="{% url 'gold_loan:dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
 
             {% if loan.status == 'active' %}
+            <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn btn-secondary">Add Payment</a>
             <a href="{% url 'gold_loan:loan_edit' loan.id %}" class="btn btn-primary"
-                style="background-color: #f59e0b; border-color: #d97706;">✏️ Edit</a>
-            <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn btn-secondary">💰 Add Payment</a>
-            <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn btn-danger">❌ Close Loan</a>
+                style="background-color: #f59e0b; border-color: #d97706;">Edit</a>
+            <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn btn-danger">Close Loan</a>
             {% elif loan.status == 'closed' %}
             <a href="{% url 'gold_loan:loan_closure_receipt' loan.id %}" target="_blank" class="btn btn-secondary"
                 style="border-color: #059669; color: #059669;">
-                🧾 Closure Receipt
+                Closure Receipt
             </a>
             <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn btn-secondary">
-                🔄 Extend Loan
+                Extend Loan
             </a>
             {% endif %}
         </div>
@@ -51,7 +51,11 @@
     <!-- Section 2: Customer Details -->
     <div class="section-card">
         <div class="section-header">
-            <h4 class="section-title">👤 Customer Details</h4>
+            <h4 class="section-title">Customer Details</h4>
+            <a href="{% url 'gold_loan:customer_edit' customer.id %}" class="btn btn-secondary"
+                style="font-size: 13px; padding: 4px 12px; border-color: #2563eb; color: #2563eb;">
+                Edit Customer
+            </a>
         </div>
         <div class="section-body">
             <div style="display: flex; gap: 20px; align-items: start;">
@@ -110,54 +114,14 @@
         </div>
     </div>
 
-    <!-- Section 2.5: Bank / Pledge Details -->
-    {% if loan.bank_name or loan.pledge_receipt_no %}
-    <div class="section-card">
-        <div class="section-header">
-            <h4 class="section-title">🏦 Bank / Pledge Details</h4>
-        </div>
-        <div class="section-body">
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-label">Bank Name</div>
-                    <div class="info-value">{{ loan.bank_name }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Pledge Receipt No</div>
-                    <div class="info-value">{{ loan.pledge_receipt_no }}</div>
-                </div>
-                <div class="info-item" style="grid-column: span 2;">
-                    <div class="info-label">Bank Address</div>
-                    <div class="info-value">{{ loan.bank_address|default:"-" }}</div>
-                </div>
-                {% if loan.pledge_notes %}
-                <div class="info-item" style="grid-column: span 2;">
-                    <div class="info-label">Notes</div>
-                    <div class="info-value">{{ loan.pledge_notes }}</div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="section-card" style="border: 1px dashed #d1d5db; background: #fdfbf7;">
-        <div class="section-body" style="padding: 15px; text-align: center; color: #b45309;">
-            <strong>ℹ️ Pledge details not yet added.</strong>
-            {% if loan.status == 'active' %}
-            <a href="{% url 'gold_loan:loan_edit' loan.id %}"
-                style="color: #d97706; text-decoration: underline; margin-left: 5px;">Add them now</a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Section 3: Loan Details -->
     <div class="section-card">
         <div class="section-header">
-            <h4 class="section-title">📄 Loan Details</h4>
+            <h4 class="section-title">Loan Details</h4>
             <a href="{% url 'gold_loan:loan_receipt' loan.id %}" target="_blank"
                 style="font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 500;">
-                🧾 View Receipt
+                View Receipt
             </a>
         </div>
         <div class="section-body">
@@ -210,7 +174,7 @@
     <!-- Section 3.5: Interest Simulation -->
     <div class="section-card" style="border: 1px solid #e5e7eb; background: #f9fafb;">
         <div class="section-header" style="background: #f3f4f6;">
-            <h4 class="section-title">🧮 Interest Simulation</h4>
+            <h4 class="section-title">Interest Simulation</h4>
         </div>
         <div class="section-body">
             <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
@@ -219,8 +183,7 @@
                         Creation</label>
                     <div style="display: flex; gap: 10px;">
                         <input type="number" id="simulate-days" class="btn btn-secondary"
-                            style="flex: 1; text-align: left; cursor: text; padding: 10px;"
-                            placeholder="Enter days (e.g. 30)">
+                            style="flex: 1; text-align: left; padding: 10px;" placeholder="Enter days (e.g. 30)">
                         <button onclick="runSimulation()" class="btn btn-primary" id="sim-btn">Simulate</button>
                     </div>
                 </div>
@@ -259,19 +222,20 @@
     </div>
 
     <!-- Section 4: Gold Items -->
-    <div class="section-card">
-        <div class="section-header">
-            <h4 class="section-title">💍 Gold Items</h4>
+    <div class="data-card">
+        <div class="data-header">
+            <h4>Gold Items</h4>
         </div>
         <div class="section-body" style="padding: 0;">
-            <table class="view-table">
+            <table class="finance-table">
                 <thead>
                     <tr>
                         <th style="width: 50px;">#</th>
                         <th>Item Name</th>
                         <th>Carat</th>
                         <th>Gross Wt</th>
-                        <th>Net Wt</th>
+                        <th style="color: var(--primary);">Net Wt</th>
+                        <th>Pieces</th>
                         <th>Description</th>
                         <th style="width: 200px;">Images</th>
                     </tr>
@@ -279,20 +243,24 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ item.item_name }}</td>
-                        <td>{{ item.get_carat_display }}</td>
-                        <td>{{ item.gross_weight }}g</td>
-                        <td>{{ item.approved_net_weight }}g</td>
-                        <td>{{ item.description|default:"-" }}</td>
+                        <td style="color: var(--text-muted); font-size: 11px;">{{ forloop.counter }}</td>
+                        <td style="font-weight: 600; color: var(--text-primary);">{{ item.item_name }}</td>
+                        <td><span style="font-size: 12px; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{
+                                item.get_carat_display }}</span></td>
+                        <td class="amount-cell">{{ item.gross_weight }}g</td>
+                        <td class="amount-cell" style="color: var(--primary);">{{ item.approved_net_weight }}g</td>
+                        <td style="font-weight: 600;">{{ item.bundle.item_count|default:"1" }}</td>
+                        <td style="font-size: 12px; color: var(--text-secondary);">{{ item.description|default:"-" }}
+                        </td>
                         <td>
                             <div class="image-gallery">
                                 {% for img in item.images.all %}
                                 <a href="{{ img.image.url }}" target="_blank">
-                                    <img src="{{ img.image.url }}" class="gallery-img" alt="Item Image">
+                                    <img src="{{ img.image.url }}" class="gallery-img" alt="Item Image"
+                                        style="width: 42px; height: 42px;">
                                 </a>
                                 {% empty %}
-                                <span style="color: #999; font-size: 12px;">No images</span>
+                                <span style="color: #cbd5e1; font-size: 10px;">None</span>
                                 {% endfor %}
                             </div>
                         </td>
@@ -304,48 +272,87 @@
     </div>
 
     <!-- Section 5: Documents -->
-    <div class="section-card">
-        <div class="section-header">
-            <h4 class="section-title">📂 Documents</h4>
+    <div class="data-card">
+        <div class="data-header">
+            <h4>Documents</h4>
         </div>
         <div class="section-body" style="padding: 0;">
-            <table class="view-table">
+            <table class="finance-table">
                 <thead>
                     <tr>
                         <th>Document Type</th>
                         <th>Details</th>
                         <th>Preview</th>
-                        <th>Action</th>
+                        <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for doc in documents %}
                     <tr>
-                        <td>{{ doc.get_document_type_display }}</td>
-                        <td>{{ doc.other_name|default:"-" }}</td>
+                        <td style="font-weight: 600;">{{ doc.get_document_type_display }}</td>
+                        <td style="color: var(--text-secondary);">{{ doc.other_name|default:"-" }}</td>
                         <td>
                             {% if doc.image %}
                             <img src="{{ doc.image.url }}"
-                                style="height: 40px; border-radius: 4px; border: 1px solid #ddd;" alt="Doc">
+                                style="height: 32px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;"
+                                alt="Doc">
                             {% else %}
-                            -
+                            <span style="color: #cbd5e1;">-</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="text-align: right;">
                             {% if doc.image %}
                             <a href="{{ doc.image.url }}" target="_blank" class="btn btn-secondary"
-                                style="padding: 4px 8px; font-size: 12px;">View</a>
+                                style="padding: 4px 12px; font-size: 11px; font-weight: 700;">VIEW</a>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align:center; padding: 20px; color: #6b7280;">No documents attached
+                        <td colspan="4" style="text-align:center; padding: 30px; color: #94a3b8;">No documents attached
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- 📌 FIXED ACTION FOOTER -->
+    <div class="view-action-footer">
+        <div class="footer-left">
+            <div class="footer-loan-info">
+                <h4>{{ loan.loan_number }}</h4>
+                {% if loan.status == 'closed' %}
+                <span class="status-badge status-closed">CLOSED</span>
+                {% else %}
+                <span class="status-badge status-{{ loan.status|lower }}">{{ loan.get_status_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <!-- Always Visible Actions -->
+            <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-footer btn-f-primary">
+                Add Payment
+            </a>
+
+            <a href="{% url 'gold_loan:loan_edit' loan.id %}" class="btn-footer btn-f-secondary">
+                Edit Pledge
+            </a>
+
+            <!-- Conditional Actions -->
+            {% if loan.status == 'active' %}
+            <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn-footer btn-f-danger">
+                Close Loan
+            </a>
+            {% endif %}
+
+            {% if loan.status == 'closed' %}
+            <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn-footer btn-f-warning">
+                Extend Loan
+            </a>
+            {% endif %}
         </div>
     </div>
 

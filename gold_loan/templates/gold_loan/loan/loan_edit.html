@@ -5,363 +5,448 @@
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'gold_loan/css/loan_view.css' %}">
-<style>
-    .edit-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding-bottom: 50px;
-    }
 
-    .edit-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        border: 1px solid #e5e7eb;
-    }
-
-    .edit-titles p {
-        color: #6b7280;
-        margin: 4px 0 0;
-    }
-
-    .forms-grid {
-        display: block;
-        /* Using block to stack elements vertically */
-    }
-
-    .section-card {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        margin-bottom: 24px;
-    }
-
-    .section-card h3 {
-        margin: 0 0 20px;
-        font-size: 16px;
-        color: #111827;
-        font-weight: 600;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #f3f4f6;
-    }
-
-    .field-group {
-        margin-bottom: 16px;
-    }
-
-    .field-group label {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        color: #4b5563;
-        margin-bottom: 6px;
-    }
-
-    .field-group input,
-    .field-group textarea {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.15s;
-    }
-
-    .field-group input:focus,
-    .field-group textarea:focus {
-        border-color: #3b82f6;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px dashed #e5e7eb;
-        font-size: 14px;
-    }
-
-    .summary-row.total {
-        border-bottom: none;
-        padding-top: 16px;
-        font-weight: 600;
-        color: #111827;
-        font-size: 16px;
-    }
-
-    .btn-save {
-        background: #10b981;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s;
-        width: 100%;
-        margin-top: 16px;
-    }
-
-    .btn-save:hover {
-        background: #059669;
-    }
-
-    .expenses-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-
-    .expenses-table th,
-    .expenses-table td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #f3f4f6;
-    }
-
-    .expenses-table th {
-        font-weight: 500;
-        color: #6b7280;
-        background: #f9fafb;
-    }
-
-    .btn-delete {
-        color: #ef4444;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 4px;
-        font-size: 16px;
-    }
-
-    .add-expense-row {
-        display: flex;
-        gap: 10px;
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px dashed #e5e7eb;
-    }
-
-    .btn-add {
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    @media (max-width: 768px) {
-        .forms-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Header Actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div style="display: flex; gap: 12px;">
+            <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn btn-secondary"
+                style="background: white; color: #374151; border: 1px solid #d1d5db; padding: 10px 20px; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span>←</span> Back to Loan
+            </a>
+        </div>
+        <div style="text-align: right;">
+            <h2 style="margin: 0; font-size: 20px; color: #1e293b; font-weight: 800;">Loan #{{ loan.loan_number }}</h2>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #64748b; font-weight: 500;">Customer: {{ customer.name }}
+            </p>
+        </div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-header" style="padding: 16px 20px;">
+            <h3>Current Pledge</h3>
+        </div>
+
+        <div class="view-info-grid">
+            <!-- Bank -->
+            <div class="view-item" style="grid-column: span 2;">
+                <div class="view-label">Target Bank</div>
+                <div class="view-value display-bank-name" style="font-size: 16px; color: #1e293b;">
+                    {% if pledge.bank_name %}
+                    {{ pledge.bank_name }}
+                    {% else %}
+                    Not set
+                    {% endif %}
+                </div>
+
+                <div class="view-value display-bank-address"
+                    style="font-size: 12px; color: #64748b; font-weight: 400; margin-top: 2px;">
+                    {% if pledge.bank_address %}
+                    {{ pledge.bank_address }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Receipt No -->
+            <div class="view-item">
+                <div class="view-label">Receipt No</div>
+                <div class="view-value display-receipt-no">
+                    {% if pledge.pledge_receipt_no %}
+                    {{ pledge.pledge_receipt_no }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Interest Period -->
+            <div class="view-item">
+                <div class="view-label">Period</div>
+                <div class="view-value display-interest-period">
+                    {% if pledge.interest_period %}
+                    {{ pledge.interest_period }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actual Weight -->
+            <div class="view-item">
+                <div class="view-label">Actual Weight</div>
+                <div class="view-value high display-actual-weight">
+                    {% if pledge.total_actual_grams %}
+                    {{ pledge.total_actual_grams|floatformat:3 }}g
+                    {% else %}
+                    0.000g
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Approved Weight -->
+            <div class="view-item">
+                <div class="view-label">Approved Weight</div>
+                <div class="view-value high display-approved-weight">
+                    {% if pledge.total_approved_grams %}
+                    {{ pledge.total_approved_grams|floatformat:3 }}g
+                    {% else %}
+                    0.000g
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Price per gram -->
+            <div class="view-item">
+                <div class="view-label">Price / Gram</div>
+                <div class="view-value display-pledge-price">
+                    {% if pledge.price_per_gram %}
+                    ₹ {{ pledge.price_per_gram|floatformat:2 }}
+                    {% else %}
+                    ₹ 0.00
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Interest Rate -->
+            <div class="view-item">
+                <div class="view-label">Rate</div>
+                <div class="view-value display-pledge-rate">
+                    {% if pledge.interest_rate %}
+                    {{ pledge.interest_rate|floatformat:2 }}%
+                    {% else %}
+                    0.00%
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Adjustments -->
+        <div class="view-table">
+            <div class="view-label" style="margin-bottom: 10px;">Recent Adjustments</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adj in adjustments|slice:":5" %}
+                    <tr>
+                        <td>{{ adj.date|date:"d M" }}</td>
+                        <td style="font-weight: 700; color: #059669;">
+                            ₹ {{ adj.amount|floatformat:2 }}
+                        </td>
+                        <td>{{ adj.medium }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding: 20px; color: #94a3b8;">
+                            No adjustments
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+                {% if adjustments %}
+                <tfoot>
+                    <tr style="background:#f1f5f9;">
+                        <td colspan="3" style="text-align:right; padding:10px; font-weight:800;">
+                            Total: ₹ {{ total_adjustment_amount|floatformat:2 }}
+                        </td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+
+
+    </div>
+
+
+
+
 <div class="edit-container">
 
     {% if success %}
     <div
-        style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
-        <span>✅ {{ success }}</span>
+        style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 14px 20px; border-radius: 10px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span style="font-weight: 600;">{{ success }}</span>
         <a href="{% url 'gold_loan:loan_view' loan.id %}"
-            style="font-weight: 600; color: #065f46; text-decoration: none;">View Loan →</a>
+            style="font-weight: 700; color: #166534; text-decoration: underline;">View Loan Details →</a>
     </div>
     {% endif %}
 
     {% if error %}
     <div
-        style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
-        ⚠️ {{ error }}
+        style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 14px 20px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span style="font-weight: 600;">Error:</span> {{ error }}
     </div>
     {% endif %}
 
-    <!-- Header (Read-Only) -->
-    <div class="edit-header">
-        <div class="edit-titles">
-            <h2 style="margin:0;">Editing Loan: {{ loan.loan_number }}</h2>
-            <p>Lot: {{ loan.lot_number }} | Customer: {{ customer.name }}</p>
-        </div>
-        <div>
-            <span class="status-badge status-{{ loan.status }}">{{ loan.get_status_display }}</span>
-        </div>
-    </div>
+    
 
-    <div class="forms-grid">
-        <!-- Main Form Section -->
-        <div>
-            <form method="post">
+    <div class="split-layout">
+        <!-- LEFT COLUMN: EDIT FORM -->
+        <div class="edit-side">
+            <form method="post" id="editForm">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_loan">
 
-                <!-- Bank / Pledge Details (Editable) -->
-                <div class="section-card">
-                    <h3>🏦 Bank / Pledge Details</h3>
+                <div class="section-card" style="padding: 16px 20px;">
+                    <h3 style="margin-bottom: 20px;">Edit Company Pledge Details</h3>
 
-                    <div class="field-group">
-                        <label>Bank Name</label>
-                        <input type="text" name="bank_name" value="{{ loan.bank_name|default:'' }}"
-                            placeholder="e.g. Canara Bank">
+                    <div class="field-grid-2">
+                        <div class="field-group">
+                            <label class="required">Bank Name</label>
+                            <input type="text" name="bank_name" id="id_bank_name" value="{{ pledge.bank_name }}"
+                                placeholder="Enter receiving bank name" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Pledge Receipt No</label>
+                            <input type="text" name="pledge_receipt_no" id="id_receipt_no"
+                                value="{{ pledge.pledge_receipt_no }}" placeholder="RE-123456" required>
+                        </div>
                     </div>
 
                     <div class="field-group">
-                        <label>Bank Address</label>
-                        <textarea name="bank_address" rows="2"
-                            placeholder="Bank Branch & Address">{{ loan.bank_address|default:'' }}</textarea>
+                        <label class="required">Bank Address</label>
+                        <textarea name="bank_address" id="id_bank_address" rows="2"
+                            placeholder="Complete branch address" required>{{ pledge.bank_address }}</textarea>
                     </div>
 
-                    <div class="field-group">
-                        <label>Pledge Receipt Number</label>
-                        <input type="text" name="pledge_receipt_no" value="{{ loan.pledge_receipt_no|default:'' }}">
+                    <div class="field-grid-2">
+                        <div class="field-group">
+                            <label>Interest Period</label>
+                            <input type="text" name="interest_period" id="id_interest_period"
+                                value="{{ pledge.interest_period|default:'' }}" placeholder="e.g. 10 month">
+                        </div>
+                        <div class="field-group">
+                            <label>Internal Interest Rate (%)</label>
+                            <input type="number" step="0.01" name="pledge_interest_rate" id="id_pledge_rate"
+                                value="{% if pledge.interest_rate %}{{ pledge.interest_rate|stringformat:'.2f' }}{% endif %}"
+                                placeholder="9.00">
+                        </div>
+                    </div>
+
+                    <div class="field-grid-3">
+                        <div class="field-group">
+                            <label>Total Actual Grams</label>
+                            <input type="number" step="0.001" name="total_actual_grams" id="id_actual_weight"
+                                value="{% if pledge.total_actual_grams %}{{ pledge.total_actual_grams|stringformat:'.3f' }}{% endif %}"
+                                placeholder="12.000">
+                        </div>
+                        <div class="field-group">
+                            <label>Total Approved Grams</label>
+                            <input type="number" step="0.001" name="total_approved_grams" id="id_approved_weight"
+                                value="{% if pledge.total_approved_grams %}{{ pledge.total_approved_grams|stringformat:'.3f' }}{% endif %}"
+                                placeholder="12.000">
+                        </div>
+                        <div class="field-group">
+                            <label>Price / Gram (₹)</label>
+                            <input type="number" step="0.01" name="pledge_price_per_gram" id="id_pledge_price"
+                                value="{% if pledge.price_per_gram %}{{ pledge.price_per_gram|stringformat:'.2f' }}{% endif %}"
+                                placeholder="10000.00">
+                        </div>
+                    </div>
+
+                    <!-- <div class="field-group">
+                        <label>Internal Notes</label>
+                        <input type="text" name="pledge_notes" id="id_pledge_notes"
+                            value="{{ pledge.notes|default:'' }}" placeholder="Confidential notes">
+                    </div> -->
+                </div>
+
+                <div class="data-card" style="margin-top: 30px;">
+                    <div class="data-header">
+                        <h4>Gold Items Pieces Tracking</h4>
+                    </div>
+                    <div class="section-body" style="padding: 0;">
+                        <table class="finance-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Weight</th>
+                                    <th style="width: 100px;">Pieces</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="item_id[]" value="{{ item.id }}">
+                                        <div style="font-weight: 600;">{{ item.item_name }}</div>
+                                        <div style="font-size: 11px; color: #64748b;">{{ item.get_carat_display }}
+                                        </div>
+                                    </td>
+                                    <td class="amount-cell">{{ item.approved_net_weight }}g</td>
+                                    <td>
+                                        <input type="number" name="item_count[]"
+                                            value="{{ item.bundle.item_count|default:1 }}" min="1" required
+                                            style="width: 80px; height: 32px; border-radius: 6px; border: 1px solid var(--border-color); padding: 0 8px;">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Loan Configuration (Editable) -->
-                <div class="section-card">
-                    <h3>⚙️ Loan Configuration</h3>
-
-                    <div class="field-group">
-                        <label>Interest Rate (%)</label>
-                        <input type="number" step="0.01" name="interest_rate" value="{{ loan.interest_rate }}" required>
-                        <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Created with: {{ loan.interest_rate
-                            }}%</p>
+                <div class="data-card" style="margin-top: 30px;">
+                    <div class="data-header">
+                        <h4>Profit / Adjustment Tracking</h4>
                     </div>
-
-                    <div class="field-group">
-                        <label>Price per Gram (₹)</label>
-                        <input type="number" step="0.01" name="price_per_gram" id="pricePerGram"
-                            value="{{ loan.price_per_gram }}" required onchange="updateTotal()">
+                    <div class="section-body" style="padding: 0;">
+                        <table class="finance-table" id="adjTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 140px;">Date</th>
+                                    <th style="width: 140px;">Amount</th>
+                                    <th style="width: 150px;">Medium</th>
+                                    <th>Notes</th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="adjBody">
+                                {% for adj in adjustments %}
+                                <tr>
+                                    <td><input type="date" name="adj_date[]" value="{{ adj.date|date:'Y-m-d' }}"
+                                            class="f-control-sm"></td>
+                                    <td><input type="number" step="0.01" name="adj_amount[]"
+                                            class="adj-amount f-control-sm" value="{{ adj.amount }}"
+                                            oninput="calculateAdjTotal()" placeholder="0.00">
+                                    </td>
+                                    <td><input type="text" name="adj_medium[]" value="{{ adj.medium }}"
+                                            class="f-control-sm" placeholder="UPI/Cash"></td>
+                                    <td><input type="text" name="adj_notes[]" value="{{ adj.notes|default:'' }}"
+                                            class="f-control-sm" placeholder="Details"></td>
+                                    <td><button type="button" class="btn-remove-row"
+                                            onclick="removeRow(this)">✕</button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="field-group">
-                        <label>Total Loan Amount (Auto-calc)</label>
-                        <input type="text" id="totalAmountDisplay" value="₹ {{ loan.total_amount }}" readonly
-                            style="background: #f3f4f6; color: #6b7280;">
-                    </div>
-
-                    <p style="font-size: 12px; color: #6b7280; line-height: 1.4;">
-                        ⚠️ Changing rate affects <strong>future</strong> interest calculations only.
-                        Changing price recalculates the loan principal.
-                    </p>
-
-                    <button type="submit" class="btn-save">💾 Save Changes</button>
-                    <a href="{% url 'gold_loan:loan_view' loan.id %}"
-                        style="display: block; text-align: center; margin-top: 12px; color: #6b7280; text-decoration: none; font-size: 14px;">Cancel
-                        & Go Back</a>
                 </div>
-            </form>
-        </div>
 
-        <!-- Supplementary Sections -->
-        <div>
-            <!-- Gold Summary (Read-Only) -->
-            <div class="section-card" style="background: #fafafa;">
-                <h3>⚖️ Gold Summary (Read-Only)</h3>
-                <div class="summary-row">
-                    <span>Total Actual Weight</span>
-                    <strong>{{ total_actual_grams }}g</strong>
+                <button type="button" class="btn-add-row" onclick="addRow()">
+                    <span>Add Row</span>
+                </button>
+
+                <div class="total-section">
+                    <span class="total-label">Current Adjustment Total:</span>
+                    <span class="total-value" id="grandTotal">₹ {{ total_adjustment_amount|stringformat:'.2f'
+                        }}</span>
                 </div>
-                <div class="summary-row">
-                    <span>Total Approved Weight</span>
-                    <strong id="approvedGrams">{{ total_approved_grams }}g</strong>
-                </div>
-                <div style="margin-top: 12px; font-size: 13px; color: #6b7280;">
-                    To modify items, please close this loan and create a new one, or contact admin.
-                </div>
-            </div>
-
-            <!-- Internal Amount Tracker (Profit Helper) -->
-            <div class="section-card">
-                <h3>📊 Internal Amount Tracker</h3>
-                <p style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">
-                    Track separate pledge amounts or company charges here.
-                </p>
-
-                <table class="expenses-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Medium</th>
-                            <th>Notes</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for expense in expenses %}
-                        <tr>
-                            <td>{{ expense.date|date:"d M Y" }}</td>
-                            <td>₹ {{ expense.amount }}</td>
-                            <td>{{ expense.medium|default:"-" }}</td>
-                            <td>{{ expense.notes|default:"-" }}</td>
-                            <td style="text-align: right;">
-                                <form method="post" onsubmit="return confirm('Remove this entry?');" style="margin:0;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="delete_expense">
-                                    <input type="hidden" name="expense_id" value="{{ expense.id }}">
-                                    <button type="submit" class="btn-delete" title="Remove">✕</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #9ca3af; padding: 20px;">No charges
-                                tracked yet</td>
-                        </tr>
-                        {% endfor %}
-
-                        {% if expenses %}
-                        <tr style="border-top: 2px solid #e5e7eb; background: #f9fafb;">
-                            <td style="font-weight: 600;">Total</td>
-                            <td style="font-weight: 600;">₹ {{ total_expenses }}</td>
-                            <td colspan="3"></td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-
-                <form method="post" class="add-expense-row">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="add_expense">
-                    <input type="date" name="date" required value="{% now 'Y-m-d' %}"
-                        style="width: 130px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-
-                    <input type="number" step="0.01" name="amount" placeholder="Amount" required
-                        style="width: 100px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-
-                    <input type="text" name="medium" placeholder="Medium" required
-                        style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-
-                    <input type="text" name="notes" placeholder="Notes (Optional)"
-                        style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-
-                    <button type="submit" class="btn-add">Add</button>
-                </form>
-            </div>
         </div>
     </div>
+    </form>
 </div>
 
-<script>
-    function updateTotal() {
-        const price = parseFloat(document.getElementById('pricePerGram').value) || 0;
-        const grams = parseFloat(document.getElementById('approvedGrams').innerText) || parseFloat("{{ total_approved_grams|default:0 }}");
+<!-- RIGHT COLUMN: CURRENT PLEDGE VIEW -->
+<div class="view-side">
+    <div style="margin-bottom: 24px;">
+        <button type="submit" form="editForm" class="btn btn-primary"
+            style="width: 100%; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); display: flex; align-items: center; justify-content: center; gap: 10px;">
+            Save Changes
+        </button>
+    </div>
 
-        const total = price * grams;
-        document.getElementById('totalAmountDisplay').value = '₹ ' + total.toFixed(2);
+
+</div>
+
+
+<script>
+    function addRow() {
+        const tbody = document.getElementById('adjBody');
+        const today = new Date().toISOString().split('T')[0];
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="date" name="adj_date[]" value="${today}"></td>
+            <td><input type="number" step="0.01" name="adj_amount[]" class="adj-amount" placeholder="0.00" oninput="calculateAdjTotal()"></td>
+            <td><input type="text" name="adj_medium[]" placeholder="UPI/Cash"></td>
+            <td><input type="text" name="adj_notes[]" placeholder="Details"></td>
+            <td style="text-align: center;">
+                <button type="button" class="btn-remove-row" onclick="removeRow(this)">✕</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        calculateAdjTotal();
     }
+
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        row.remove();
+        calculateAdjTotal();
+    }
+
+    function calculateAdjTotal() {
+        let total = 0;
+        const amounts = document.querySelectorAll('.adj-amount');
+        amounts.forEach(input => {
+            const val = parseFloat(input.value) || 0;
+            total += val;
+        });
+        document.getElementById('grandTotal').innerText = '₹ ' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Mirroring functionality
+    function initMirroring() {
+        const syncMap = [
+            { from: '#id_bank_name', to: '.display-bank-name', suffix: '', default: '-' },
+            { from: '#id_bank_address', to: '.display-bank-address', suffix: '', default: '' },
+            { from: '#id_receipt_no', to: '.display-receipt-no', suffix: '', default: '-' },
+            { from: '#id_interest_period', to: '.display-interest-period', suffix: '', default: '-' },
+            { from: '#id_actual_weight', to: '.display-actual-weight', suffix: 'g', default: '0.000' },
+            { from: '#id_approved_weight', to: '.display-approved-weight', suffix: 'g', default: '0.000' },
+            { from: '#id_pledge_price', to: '.display-pledge-price', prefix: '₹ ', default: '0.00' },
+            { from: '#id_pledge_rate', to: '.display-pledge-rate', suffix: '%', default: '0.00' },
+            { from: '#id_pledge_notes', to: '.display-pledge-notes', suffix: '', default: 'No internal notes.' }
+        ];
+
+        syncMap.forEach(item => {
+            const input = document.querySelector(item.from);
+            const display = document.querySelector(item.to);
+            if (input && display) {
+                input.addEventListener('input', e => {
+                    let val = e.target.value.trim();
+                    if (!val) {
+                        display.innerText = item.default;
+                    } else {
+                        display.innerText = (item.prefix || '') + val + (item.suffix || '');
+                    }
+                });
+            }
+        });
+    }
+
+    function initStickyObserver() {
+        const side = document.querySelector('.view-side');
+        if (!side) return;
+
+        const observer = new IntersectionObserver(
+            ([e]) => side.classList.toggle('stuck', e.intersectionRatio < 1),
+            { threshold: [1], rootMargin: '-81px 0px 0px 0px' }
+        );
+
+        observer.observe(side);
+    }
+
+
+    window.onload = function () {
+        const rows = document.querySelectorAll('#adjBody tr');
+        if (rows.length === 0) {
+            addRow();
+        }
+        calculateAdjTotal();
+        initMirroring();
+        initStickyObserver();
+    };
 </script>
 {% endblock %}
