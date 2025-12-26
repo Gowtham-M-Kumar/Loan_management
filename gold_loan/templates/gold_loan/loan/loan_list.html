@@ -13,9 +13,11 @@
 
 {% block content %}
 <div class="loan-list">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h4 class="section-title" style="margin: 0;">{{ title }} History</h4>
-        <div style="font-size: 14px; color: #6b7280;">Total: {{ loans.count }} Loans</div>
+    <div class="dash-page-header">
+        <div class="header-text">
+            <h3>{{ title }}</h3>
+            <div class="subtitle">Showing all record of {{ title|lower }}</div>
+        </div>
     </div>
 
     <table class="loan-table">

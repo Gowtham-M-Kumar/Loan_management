@@ -3,60 +3,296 @@
 
 {% block title %}Customers{% endblock %}
 
-{% block page_header %}
-<h3>Customers</h3>
-{% endblock %}
-
 {% block content %}
-<!-- Search Bar -->
-<div class="search-section" style="margin-bottom: 25px;">
-    <form method="GET" action="." style="display: flex; gap: 10px; max-width: 500px;">
-        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by name, ID, or mobile..."
-            style="flex-grow: 1; padding: 10px 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-        <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">🔍 Search</button>
-        {% if search_query %}
-        <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
-            style="padding: 10px 15px; display: flex; align-items: center; text-decoration: none;">Clear</a>
-        {% endif %}
-    </form>
-</div>
+<div class="dashboard-wrapper">
+    <!-- Page Header & Search Section -->
+    <div class="search-section-container" style="margin-bottom: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
+            <div class="header-text">
+                <h3
+                    style="font-size: 32px; font-weight: 900; color: var(--text-primary); margin: 0; letter-spacing: -0.04em;">
+                    Customers</h3>
+                <p style="color: var(--text-secondary); margin: 4px 0 0 0; font-size: 15px; font-weight: 500;">Manage
+                    your customer database and loan histories</p>
+            </div>
 
-<div class="customer-grid"
-    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-    {% for customer in customers %}
-    <a href="{% url 'gold_loan:customer_detail' customer.id %}" class="customer-card"
-        style="display: block; background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit; transition: box-shadow 0.2s;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div class="profile-thumb"
-                style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #f3f4f6; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                {% if customer.photo %}
-                <img src="{{ customer.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                {% else %}
-                👤
-                {% endif %}
-            </div>
-            <div>
-                <h4 style="margin: 0; font-size: 16px; color: #111827;">{{ customer.name }}</h4>
-                <div style="font-size: 13px; color: #6b7280; margin-top: 2px;">{{ customer.customer_id }}</div>
+            <div class="search-box-wrapper" style="flex: 1; max-width: 550px; min-width: 300px;">
+                <form method="GET" action="." style="display: flex; gap: 12px; align-items: center;">
+                    <div class="input-group-refined" style="position: relative; flex: 1;">
+                        <span
+                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); display: flex; align-items: center; pointer-events: none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </span>
+                        <input type="text" name="q" value="{{ search_query|default:'' }}"
+                            placeholder="Search by name, ID, or mobile..." class="search-input-field">
+                    </div>
+                    <button type="submit" class="btn btn-primary"
+                        style="padding: 12px 24px; border-radius: 14px; font-weight: 700; height: 48px;">
+                        Search
+                    </button>
+                    {% if search_query %}
+                    <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary"
+                        style="padding: 0 16px; border-radius: 14px; height: 48px; display: flex; align-items: center; justify-content: center; min-width: 80px;">
+                        Clear
+                    </a>
+                    {% endif %}
+                </form>
             </div>
         </div>
-        <div
-            style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; font-size: 14px;">
-            <div style="color: #6b7280;">📞 {{ customer.mobile_primary }}</div>
-            <div style="font-weight: 500; color: #2563eb;">{{ customer.total_loans }} Loans</div>
-        </div>
-    </a>
-    {% empty %}
-    <div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 40px;">
-        No customers found.
     </div>
-    {% endfor %}
+
+    <!-- Customer Cards Grid -->
+    <div class="customer-grid">
+        {% for customer in customers %}
+        <a href="{% url 'gold_loan:customer_detail' customer.id %}" class="customer-card-refined animate-row"
+            style="--row-index: {{ forloop.counter }}">
+            <div class="card-inner">
+                <div class="customer-meta">
+                    <div class="avatar-wrapper">
+                        {% if customer.photo %}
+                        <img src="{{ customer.photo.url }}" alt="{{ customer.name }}">
+                        {% else %}
+                        <div class="avatar-placeholder">{{ customer.name|slice:":1"|upper }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="info">
+                        <h4 class="name">{{ customer.name }}</h4>
+                        <span class="id">ID: {{ customer.customer_id }}</span>
+                    </div>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <span class="label">Primary Mobile</span>
+                        <span class="value">{{ customer.mobile_primary }}</span>
+                    </div>
+                    <div class="stat-item" style="text-align: right;">
+                        <span class="label">Total Loans</span>
+                        <span class="value-highlight">{{ customer.total_loans }}</span>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <span class="view-profile">View Profile</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-results">
+            <div class="empty-icon">🔍</div>
+            <h3>No customers found</h3>
+            <p>We couldn't find any customers matching "{{ search_query }}". Try a different name, ID, or phone number.
+            </p>
+            <a href="{% url 'gold_loan:customer_list' %}" class="btn btn-secondary">See All Customers</a>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
 <style>
-    .customer-card:hover {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        border-color: #d1d5db;
+    .search-input-field {
+        width: 100%;
+        padding: 12px 16px 12px 48px;
+        border: 2px solid var(--border-color);
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 500;
+        background: white;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 48px;
+    }
+
+    .search-input-field:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .customer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .customer-card-refined {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .customer-card-refined:hover {
+        border-color: var(--primary);
+        transform: translateY(-6px);
+        box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-inner {
+        padding: 24px;
+    }
+
+    .customer-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .avatar-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: var(--bg-hover);
+        flex-shrink: 0;
+        border: 2px solid white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .avatar-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary);
+        background: var(--primary-light);
+    }
+
+    .info .name {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+    }
+
+    .info .id {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 600;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .card-stats {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 0;
+        border-top: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .stat-item .label {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .stat-item .value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .stat-item .value-highlight {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .card-footer {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 14px;
+        transition: transform 0.2s;
+    }
+
+    .customer-card-refined:hover .card-footer svg {
+        transform: translateX(4px);
+    }
+
+    .empty-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 80px 40px;
+        background: white;
+        border-radius: 24px;
+        border: 2px dashed var(--border-color);
+    }
+
+    .empty-results .empty-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+    }
+
+    .empty-results h3 {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .empty-results p {
+        color: var(--text-secondary);
+        max-width: 400px;
+        margin: 0 auto 24px;
+    }
+
+    .animate-row {
+        opacity: 0;
+        animation: fadeInRow 0.4s ease forwards;
+        animation-delay: calc(var(--row-index) * 0.05s);
+    }
+
+    @keyframes fadeInRow {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .search-section-container {
+            margin-bottom: 24px;
+        }
+
+        .header-text h3 {
+            font-size: 24px;
+        }
     }
 </style>
 {% endblock %}
