@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Q
@@ -128,22 +128,29 @@ def loan_close_otp(request, loan_id):
     Step 2: OTP Verification
     """
     loan = get_object_or_404(Loan, id=loan_id)
+    next_action = request.GET.get("action", "close")
     
     if request.method == "POST":
         otp = request.POST.get("otp")
+        next_action = request.POST.get("next_action", "close") # Preserve from form
+
         if otp == "123456": # Mock OTP
             # Set session flag
             request.session['loan_closure_verified_id'] = loan.id
+            request.session['loan_closure_next_action'] = next_action
             return redirect("gold_loan:loan_close_upload", loan_id=loan.id)
         else:
             return render(request, "gold_loan/closure/loan_close_otp.html", {
                 "loan": loan,
-                "error": "Invalid OTP. Please try again."
+                "error": "Invalid OTP. Please try again.",
+                "next_action": next_action
             })
             
     # GET: Send/Generate OTP
-    # (Mock: Assume sent)
-    return render(request, "gold_loan/closure/loan_close_otp.html", {"loan": loan})
+    return render(request, "gold_loan/closure/loan_close_otp.html", {
+        "loan": loan,
+        "next_action": next_action
+    })
 
 
 def loan_close_upload(request, loan_id):
@@ -195,6 +202,9 @@ def loan_close_confirm(request, loan_id):
         return redirect("gold_loan:loan_close_upload", loan_id=loan.id)
         
     if request.method == "POST":
+        # Check intent from session
+        next_action = request.session.get('loan_closure_next_action', 'close')
+
         loan.status = Loan.STATUS_CLOSED
         loan.closed_at = timezone.now()
         loan.save()
@@ -202,6 +212,10 @@ def loan_close_confirm(request, loan_id):
         # Clear session flag
         if 'loan_closure_verified_id' in request.session:
             del request.session['loan_closure_verified_id']
+        
+        if next_action == 'extend':
+            # Auto-redirect to extension logic
+            return redirect(f"{reverse('gold_loan:loan_extend_action', args=[loan.id])}?from_closure=true")
             
         return redirect("gold_loan:loan_view", loan_id=loan.id)
     

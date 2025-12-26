@@ -28,6 +28,7 @@
 
     <form method="POST">
         {% csrf_token %}
+        <input type="hidden" name="next_action" value="{{ next_action|default:'close' }}">
         <div style="margin-bottom: 20px;">
             <input type="text" name="otp" placeholder="Enter 6-digit OTP"
                 style="padding: 10px; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; letter-spacing: 2px; text-align: center;">
@@ -35,6 +36,7 @@
 
         <button type="submit" class="btn-close">Verify & Proceed</button>
     </form>
+
 
     <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn-cancel"
         style="text-decoration: none; display: inline-block; margin-top: 15px;">Back</a>
