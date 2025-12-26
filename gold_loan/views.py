@@ -234,9 +234,10 @@ def loan_extend_otp(request, loan_id):
 
 def loan_extend_action(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
+    from_closure = request.GET.get("from_closure") == "true"
     
-    if loan.status != Loan.STATUS_CLOSED:
-        # Cannot extend active loan
+    if not from_closure and loan.status != Loan.STATUS_CLOSED:
+        # Cannot extend active loan unless coming from closure flow
         return redirect("gold_loan:loan_view", loan_id=loan.id) # Or show error
         
     # Redirect to Step 1 with existing customer

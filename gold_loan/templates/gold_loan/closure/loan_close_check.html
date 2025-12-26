@@ -33,24 +33,28 @@
         This loan is fully paid and eligible for closure.
     </div>
 
-    <div style="margin-top: 20px;">
-        <a href="{% url 'gold_loan:loan_close_otp' loan.id %}" class="btn-close"
-            style="text-decoration: none; display: inline-block;">
+    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 4px;">
+        <a href="{% url 'gold_loan:loan_close_otp' loan.id %}" class="btn-close">
             Confirm & Close Loan
         </a>
+
+        <form action="{% url 'gold_loan:loan_extend_action' loan.id %}" method="get" style="width: 100%;">
+            <input type="hidden" name="from_closure" value="true">
+            <button type="submit" class="btn-extend">
+                Close & Extend Loan
+            </button>
+        </form>
     </div>
     {% else %}
     <div class="warning-box" style="margin-top: 20px;">
         Outstanding amount exists. Please complete payment before closing.
     </div>
 
-    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay"
-        style="text-decoration: none; display: inline-block;">
+    <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-pay">
         Go to Payment Page
     </a>
     {% endif %}
 
-    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel"
-        style="text-decoration: none; display: inline-block; margin-top: 15px;">Cancel</a>
+    <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel">Cancel</a>
 </div>
 {% endblock %}
