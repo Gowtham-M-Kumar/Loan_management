@@ -106,6 +106,8 @@ def dashboard(request):
 
 # Redirect /loan/ → Step 1
 def loan_entry(request):
+    if "loan_entry" in request.session:
+        del request.session["loan_entry"]
     return redirect("gold_loan:loan_entry_step1")
 
 

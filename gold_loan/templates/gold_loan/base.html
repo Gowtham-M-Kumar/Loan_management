@@ -29,7 +29,7 @@
         </div>
 
         <div class="header-right">
-            <a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn btn-primary btn-sm" style="margin-right: 12px;">
+            <a href="{% url 'gold_loan:loan_entry' %}" class="btn btn-primary btn-sm" style="margin-right: 12px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round"
                     style="vertical-align: text-bottom; margin-right: 4px;">
@@ -106,7 +106,7 @@
                 </li>
 
                 <li>
-                    <a href="{% url 'gold_loan:loan_entry_step1' %}"
+                    <a href="{% url 'gold_loan:loan_entry' %}"
                         class="{% if 'loan/entry' in request.path %}active{% endif %}">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
