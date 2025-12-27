@@ -1,34 +1,16 @@
-{% extends "gold_loan/base.html" %}
+{% extends "gold_loan/loan/steps_base.html" %}
 {% load static %}
 
-{% block title %}Loan Entry – Step 2{% endblock %}
+{% block step_title %}Step 2 of 5: Gold Item Details{% endblock %}
+{% block step_description %}Describe each gold item being pledged. Exactly 1 image per item is required.{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
-{% endblock %}
-
-{% block page_header %}
-<div style="display: flex; align-items: center; gap: 20px;">
-    <a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn-back-circle"
-        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
-        title="Back to Step 1">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-    </a>
-    <h3 style="margin: 0;">Loan Entry – Step 2: Gold Items</h3>
-</div>
-
-{% endblock %}
-
-{% block content %}
+{% block step_content %}
+{% with current_step=2 back_url="/loan/entry/step-1/" %}
 {% if error %}
-<p style="color:red; font-weight:600; margin-bottom: 15px;">{{ error }}</p>
+<div class="alert alert-error">{{ error }}</div>
 {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="loan-form" id="itemsForm">
+<form method="post" enctype="multipart/form-data" class="loan-form" id="stepForm">
     {% csrf_token %}
 
     <div id="items-container">
@@ -37,18 +19,19 @@
         <!-- GOLD ITEM (Existing) -->
         <div class="card gold-item" data-index="{{ forloop.counter0 }}"
             data-img-count="{{ item.images|length|default:0 }}">
-            <h4 class="item-header">Gold Item #{{ forloop.counter }}</h4>
+            <div class="section-header">
+                <h4 class="item-header">Gold Item #{{ forloop.counter }}</h4>
+                <p class="section-helper">Specify weight, carat, and provide a clear description for this item.</p>
+            </div>
 
             <div class="grid-3">
                 <input type="text" name="item_name[]" value="{{ item.item_name }}" placeholder="Item Name *" required>
 
                 <select name="carat[]" required>
                     <option value="">Carat *</option>
-                    <option value="18" {% if item.carat==18 %}selected{% endif %}>18K</option>
-                    <option value="20" {% if item.carat==20 %}selected{% endif %}>20K</option>
-                    <option value="22" {% if item.carat==22 %}selected{% endif %}>22K</option>
-                    <option value="24" {% if item.carat==24 %}selected{% endif %}>24K</option>
-
+                    <option value="18" {% if item.carat == 18 %}selected{% endif %}>18K</option>
+                    <option value="20" {% if item.carat == 20 %}selected{% endif %}>20K</option>
+                    <option value="22" {% if item.carat == 22 %}selected{% endif %}>22K</option>
                 </select>
 
                 <input type="number" step="0.001" name="gross_weight[]" value="{{ item.gross_weight }}"
@@ -65,7 +48,7 @@
             <textarea name="description[]" placeholder="Description (optional)">{{ item.description }}</textarea>
 
             <div class="file-box">
-                <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Images (Minimum 2 required)</div>
+                <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Image (1 required)</div>
 
                 <div class="media-buttons">
                     <button type="button" class="btn-media camera open-camera"
@@ -79,8 +62,8 @@
                 </div>
 
                 <input type="file" name="item_images_{{ forloop.counter0 }}[]" id="item_images_{{ forloop.counter0 }}"
-                    accept="image/*" capture="environment" multiple
-                    onchange="previewItemImages(this, '{{ forloop.counter0 }}')" style="display:none;">
+                    accept="image/*" capture="environment" onchange="previewItemImages(this, '{{ forloop.counter0 }}')"
+                    style="display:none;">
             </div>
 
             <!-- Image Preview Container -->
@@ -97,14 +80,12 @@
                         <div class="existing-image-wrapper" style="position: relative; width: 100px; height: 100px;">
                             <img src="{{ MEDIA_URL }}{{ img_path }}"
                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;">
-                            <!-- We don't have an easy way to 'remove' existing temp images via back/next yet without more complex JS, 
-                                 but showing them fulfills the 'details' requirement. -->
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <button type="button" class="btn-secondary remove-item">
+                <button type="button" class="btn-google btn-google-back remove-item" style="margin-top: 16px;">
                     Remove Item
                 </button>
             </div>
@@ -112,7 +93,10 @@
             {% else %}
             <!-- GOLD ITEM (Default Empty) -->
             <div class="card gold-item" data-index="0">
-                <h4 class="item-header">Gold Item #1</h4>
+                <div class="section-header">
+                    <h4 class="item-header">Gold Item #1</h4>
+                    <p class="section-helper">Specify weight, carat, and provide a clear description for this item.</p>
+                </div>
 
                 <div class="grid-3">
                     <input type="text" name="item_name[]" placeholder="Item Name *" required>
@@ -122,7 +106,6 @@
                         <option value="18">18K</option>
                         <option value="20">20K</option>
                         <option value="22">22K</option>
-                        <option value="24">24K</option>
                     </select>
 
                     <input type="number" step="0.001" name="gross_weight[]" placeholder="Gross Weight (g) *" required>
@@ -137,7 +120,7 @@
                 <textarea name="description[]" placeholder="Description (optional)"></textarea>
 
                 <div class="file-box">
-                    <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Images (Minimum 2 required)</div>
+                    <div style="margin-bottom: 8px; font-weight: 500;">Upload Item Image (1 required)</div>
 
                     <div class="media-buttons">
                         <button type="button" class="btn-media camera open-camera" data-target="item_images_0">
@@ -150,7 +133,7 @@
                     </div>
 
                     <input type="file" name="item_images_0[]" id="item_images_0" accept="image/*" capture="environment"
-                        multiple onchange="previewItemImages(this, '0')" style="display:none;">
+                        onchange="previewItemImages(this, '0')" style="display:none;">
                 </div>
 
                 <!-- Image Preview Container -->
@@ -161,24 +144,33 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn-secondary remove-item">
+                <button type="button" class="btn-google btn-google-back remove-item" style="margin-top: 16px;">
                     Remove Item
                 </button>
             </div>
             {% endif %}
         </div>
 
-        <button type="button" class="btn-secondary" id="addItem">
+        <button type="button" class="btn-google btn-google-add" id="addItem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
             Add Another Item
         </button>
-
-        <div class="actions">
-            <a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn-secondary">← Back</a>
-            <button type="submit" class="btn-primary">Next →</button>
-        </div>
 </form>
+{% endwith %}
+{% endblock %}
 
+{% block footer_left %}
+<a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn-google btn-google-back">← Back</a>
+{% endblock %}
+
+{% block scripts %}
 <script>
+    const currentStep = 2;
+
     // Master file storage to handle appending across multiple file picks or camera shots
     const itemFileStores = {};
     let itemIndex = parseInt("{{ items|length|default:1 }}");
@@ -307,7 +299,7 @@
     });
 
     // Form Submission Validation
-    document.getElementById("itemsForm").onsubmit = function (e) {
+    document.getElementById("stepForm").onsubmit = function (e) {
         const cards = document.querySelectorAll(".gold-item");
         let isValid = true;
 
@@ -317,13 +309,13 @@
                 isValid = false;
             }
 
-            // Check image count (min 2)
+            // Check image count (min 1)
             const index = card.getAttribute("data-index");
             const existingCount = parseInt(card.getAttribute("data-img-count") || "0");
             const newCount = itemFileStores[index] ? itemFileStores[index].size : 0;
 
-            if (existingCount + newCount < 2) {
-                alert(`Item ${parseInt(index) + 1}: At least 2 images are required.`);
+            if (existingCount + newCount < 1) {
+                alert(`Item ${parseInt(index) + 1}: Please upload or take 1 image.`);
                 isValid = false;
             }
         });
@@ -396,17 +388,19 @@
     };
 
     // Remove functionality for first item
-    document.querySelector(".remove-item").onclick = function () {
-        const allItems = document.querySelectorAll(".gold-item");
-        if (allItems.length > 1) {
-            const card = this.closest(".gold-item");
-            const idx = card.getAttribute('data-index');
-            delete itemFileStores[idx];
-            card.remove();
-            updateItemNumbers();
-        } else {
-            alert("At least one gold item is required");
-        }
-    };
+    document.querySelectorAll(".remove-item").forEach(btn => {
+        btn.onclick = function () {
+            const allItems = document.querySelectorAll(".gold-item");
+            if (allItems.length > 1) {
+                const card = this.closest(".gold-item");
+                const idx = card.getAttribute('data-index');
+                delete itemFileStores[idx];
+                card.remove();
+                updateItemNumbers();
+            } else {
+                alert("At least one gold item is required");
+            }
+        };
+    });
 </script>
 {% endblock %}

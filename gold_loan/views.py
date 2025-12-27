@@ -11,6 +11,7 @@ from django.utils import timezone
 from datetime import datetime
 from datetime import timedelta
 from django.db.models import Sum, Count
+import csv
 from .models import Customer, Loan, GoldItem, GoldItemImage, GoldItemBundle, LoanDocument, Payment, LoanExpense, LoanPledge, LoanPledgeAdjustment
 
 
@@ -18,7 +19,52 @@ def get_loan_session(request):
     return request.session.setdefault("loan_entry", {})
 
 def home(request):
-    return render(request, "gold_loan/home.html")
+    from datetime import date, timedelta
+    
+    # 1. Loan Status Distribution Data
+    active_loans_count = Loan.objects.filter(status=Loan.STATUS_ACTIVE).count()
+    closed_loans_count = Loan.objects.filter(status=Loan.STATUS_CLOSED).count()
+    # Assuming 'extended' is tracked via parent_loan being set, not a status field value 'extended'
+    extended_loans_count = Loan.objects.filter(parent_loan__isnull=False).count()
+    
+    loans_by_status = {
+        'active': active_loans_count,
+        'closed': closed_loans_count,
+        'extended': extended_loans_count
+    }
+    
+    status_chart_data = {
+        'labels': ['Active', 'Closed', 'Extended'],
+        'data': [
+            loans_by_status.get('active', 0),
+            loans_by_status.get('closed', 0),
+            loans_by_status.get('extended', 0)
+        ]
+    }
+    
+    # 2. Daily Loan Creation Trend (Last 30 days)
+    today = date.today()
+    daily_trends = []
+    
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        count = Loan.objects.filter(created_at__date=day).count()
+        daily_trends.append({
+            'date': day.strftime('%b %d'),
+            'count': count
+        })
+        
+    daily_chart_data = {
+        'labels': [item['date'] for item in daily_trends],
+        'data': [item['count'] for item in daily_trends]
+    }
+
+    context = {
+        'status_chart_data': status_chart_data,
+        'daily_chart_data': daily_chart_data,
+    }
+    
+    return render(request, "gold_loan/home.html", context)
 
 
 def dashboard(request):
@@ -230,7 +276,13 @@ def loan_extend_otp(request, loan_id):
     
     if loan.status != Loan.STATUS_CLOSED:
         # Cannot extend active loan
-        return redirect("gold_loan:loan_view", loan_id=loan.id) 
+        messages.error(request, "Only closed loans can be extended.")
+        return redirect("gold_loan:loan_view", loan_id=loan.id)
+    
+    # Check if loan has already been extended
+    if loan.extensions.exists():
+        messages.error(request, "This loan has already been extended once. Multiple extensions are not allowed.")
+        return redirect("gold_loan:loan_view", loan_id=loan.id)
 
     if request.method == "POST":
         otp = request.POST.get("otp")
@@ -252,7 +304,13 @@ def loan_extend_action(request, loan_id):
     
     if not from_closure and loan.status != Loan.STATUS_CLOSED:
         # Cannot extend active loan unless coming from closure flow
-        return redirect("gold_loan:loan_view", loan_id=loan.id) # Or show error
+        messages.error(request, "Only closed loans can be extended.")
+        return redirect("gold_loan:loan_view", loan_id=loan.id)
+    
+    # Check if loan has already been extended
+    if loan.extensions.exists():
+        messages.error(request, "This loan has already been extended once. Multiple extensions are not allowed.")
+        return redirect("gold_loan:loan_view", loan_id=loan.id)
         
     # Redirect to Step 1 with existing customer
     session = get_loan_session(request)
@@ -424,7 +482,7 @@ def loan_entry_step2(request):
                 existing_image_paths = existing_items[index].get("images", [])
 
             # Total images (new + existing)
-            if len(new_images) + len(existing_image_paths) < 2:
+            if len(new_images) + len(existing_image_paths) < 1:
                 # Build current items from POST data to preserve user input
                 current_items = []
                 for i in range(len(names)):
@@ -438,7 +496,7 @@ def loan_entry_step2(request):
                         "images": existing_items[i].get("images", []) if i < len(existing_items) else []
                     })
                 return render(request, "gold_loan/loan/step2_items.html", {
-                    "error": f"Item {index+1}: Minimum 2 images are required.",
+                    "error": f"Item {index+1}: Minimum 1 image is required.",
                     "items": current_items
                 })
 
@@ -563,7 +621,8 @@ def loan_entry_step3(request):
     
     context = {
         "total_approved_grams": total_approved_grams,
-        "loan_data": session.get("loan")
+        "loan_data": session.get("loan"),
+        "loan_number": Loan.generate_loan_number()
     }
 
     return render(request, "gold_loan/loan/step3_loan.html", context)
@@ -774,6 +833,13 @@ def loan_entry_step5(request):
 
     return render(request, "gold_loan/loan/step5_otp.html")
 
+def resend_otp_api(request):
+    """Mock API to resend OTP"""
+    if request.method == "POST":
+        # In a real app, you would regenerate and send the SMS here
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+
 
 # API Endpoints for customer search
 
@@ -952,6 +1018,9 @@ def loan_view(request, loan_id):
         adjustments = pledge.adjustments.all().order_by('date')
         total_adjustment_amount = sum(a.amount for a in adjustments)
 
+    # Check if this loan has already been extended
+    has_been_extended = loan.extensions.exists()
+    
     context = {
         "loan": loan,
         "customer": loan.customer,
@@ -964,6 +1033,7 @@ def loan_view(request, loan_id):
         "pledge": pledge,
         "adjustments": adjustments,
         "total_adjustment_amount": total_adjustment_amount,
+        "has_been_extended": has_been_extended,
     }
     return render(request, "gold_loan/loan/loan_view.html", context)
 
@@ -1528,7 +1598,75 @@ def customer_detail(request, customer_id):
     return render(request, "gold_loan/customer/customer_detail.html", context)
 
 
+
+def customer_create(request):
+    """
+    Create a new customer independently (not part of loan entry flow).
+    """
+    error = None
+    
+    if request.method == "POST":
+        try:
+            # Get form data
+            name = request.POST.get("name")
+            mobile_primary = request.POST.get("mobile_primary")
+            mobile_secondary = request.POST.get("mobile_secondary", "")
+            email = request.POST.get("email", "")
+            address = request.POST.get("address")
+            aadhaar_number = request.POST.get("aadhaar_number")
+            profession = request.POST.get("profession")
+            nominee_name = request.POST.get("nominee_name")
+            nominee_mobile = request.POST.get("nominee_mobile")
+            photo = request.FILES.get("photo")
+            
+            # Validation
+            if not all([name, mobile_primary, address, aadhaar_number, profession, nominee_name, nominee_mobile]):
+                raise ValueError("All mandatory fields (*) must be filled.")
+            
+            if len(mobile_primary) != 10 or not mobile_primary.isdigit():
+                raise ValueError("Mobile number must be exactly 10 digits.")
+            
+            if len(aadhaar_number) != 12 or not aadhaar_number.isdigit():
+                raise ValueError("Aadhaar number must be exactly 12 digits.")
+            
+            if mobile_secondary and (len(mobile_secondary) != 10 or not mobile_secondary.isdigit()):
+                raise ValueError("Secondary mobile number must be exactly 10 digits.")
+            
+            if nominee_mobile and (len(nominee_mobile) != 10 or not nominee_mobile.isdigit()):
+                raise ValueError("Nominee mobile number must be exactly 10 digits.")
+            
+            # Create customer
+            customer = Customer.objects.create(
+                name=name,
+                mobile_primary=mobile_primary,
+                mobile_secondary=mobile_secondary,
+                email=email,
+                address=address,
+                aadhaar_number=aadhaar_number,
+                profession=profession,
+                nominee_name=nominee_name,
+                nominee_mobile=nominee_mobile,
+                photo=photo
+            )
+            
+            messages.success(request, f"Customer '{customer.name}' created successfully!")
+            return redirect("gold_loan:customer_detail", customer_id=customer.id)
+            
+        except Exception as e:
+            error = str(e)
+            # Re-populate form with submitted data on error
+            return render(request, "gold_loan/customer/customer_create.html", {
+                "error": error,
+                "form_data": request.POST
+            })
+    
+    return render(request, "gold_loan/customer/customer_create.html", {
+        "error": error
+    })
+
+
 def customer_edit(request, customer_id):
+
     """
     Edit existing customer details.
     """
@@ -1578,3 +1716,321 @@ def customer_edit(request, customer_id):
         "error": error
     })
 
+
+def analytics_dashboard(request):
+    """
+    Admin Analytics & Reports Dashboard
+    Provides comprehensive system overview with key metrics and trends
+    """
+    # Basic Counts
+    total_customers = Customer.objects.count()
+    total_loans = Loan.objects.count()
+    active_loans_count = Loan.objects.filter(status=Loan.STATUS_ACTIVE).count()
+    closed_loans_count = Loan.objects.filter(status=Loan.STATUS_CLOSED).count()
+    extended_loans_count = Loan.objects.filter(parent_loan__isnull=False).count()
+    
+    # Financial Metrics
+    total_disbursed = Loan.objects.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    total_recovered = Payment.objects.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    
+    # Active Loans Financial Data
+    active_loans = Loan.objects.filter(status=Loan.STATUS_ACTIVE)
+    total_active_principal = Decimal('0')
+    total_pending_interest = Decimal('0')
+    
+    for loan in active_loans:
+        _update_loan_interest(loan)
+        outstanding = _calculate_outstanding_principal(loan)
+        total_active_principal += outstanding
+        total_pending_interest += loan.pending_interest
+    
+    # Loans by Status (for pie chart)
+    loans_by_status = {
+        'active': active_loans_count,
+        'closed': closed_loans_count,
+        'extended': extended_loans_count
+    }
+    
+    # Daily Loan Creation Trend (Last 30 days)
+    from datetime import date
+    today = date.today()
+    daily_trends = []
+    
+    for i in range(29, -1, -1):
+        day = today - timedelta(days=i)
+        count = Loan.objects.filter(created_at__date=day).count()
+        daily_trends.append({
+            'date': day.strftime('%b %d'),
+            'count': count
+        })
+    
+    # Monthly Loan Creation (Last 12 months)
+    monthly_trends = []
+    for i in range(11, -1, -1):
+        month_start = today.replace(day=1) - timedelta(days=30*i)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        count = Loan.objects.filter(created_at__date__gte=month_start, created_at__date__lte=month_end).count()
+        monthly_trends.append({
+            'month': month_start.strftime('%b %Y'),
+            'count': count
+        })
+    
+    # Top Customers by Loan Count
+    from django.db.models import Count as CountAgg
+    top_customers = Customer.objects.annotate(
+        loan_count=CountAgg('loans')
+    ).filter(loan_count__gt=0).order_by('-loan_count')[:5]
+    
+    # Recent Activity (Last 10 loans)
+    recent_loans = Loan.objects.select_related('customer').order_by('-created_at')[:10]
+    
+    # Overdue/Pending Analysis
+    overdue_loans = []
+    for loan in active_loans:
+        if loan.pending_interest > 0:
+            overdue_loans.append(loan)
+    
+    context = {
+        'total_customers': total_customers,
+        'total_loans': total_loans,
+        'active_loans_count': active_loans_count,
+        'closed_loans_count': closed_loans_count,
+        'extended_loans_count': extended_loans_count,
+        'total_disbursed': total_disbursed,
+        'total_recovered': total_recovered,
+        'total_active_principal': total_active_principal,
+        'total_pending_interest': total_pending_interest,
+        'loans_by_status': loans_by_status,
+        'daily_trends': daily_trends,
+        'monthly_trends': monthly_trends,
+        'top_customers': top_customers,
+        'recent_loans': recent_loans,
+        'overdue_count': len(overdue_loans),
+        # Chart Data prepared for JSON output
+        'status_chart_data': {
+            'labels': ['Active', 'Closed', 'Extended'],
+            'data': [
+                loans_by_status.get('active', 0),
+                loans_by_status.get('closed', 0),
+                loans_by_status.get('extended', 0)
+            ]
+        },
+        'daily_chart_data': {
+            'labels': [item['date'] for item in daily_trends],
+            'data': [item['count'] for item in daily_trends]
+        },
+        'monthly_chart_data': {
+            'labels': [item['month'] for item in monthly_trends],
+            'data': [item['count'] for item in monthly_trends]
+        }
+    }
+    
+    return render(request, "gold_loan/analytics/analytics_dashboard.html", context)
+
+
+def export_report(request):
+    """
+    Export reports in PDF or Excel format with optional date filtering.
+    Supports: all_loans, active_loans, closed_loans, extended_loans, customers
+    """
+    from django.http import HttpResponse
+    from datetime import datetime
+    
+    report_type = request.GET.get('report_type', 'all_loans')
+    export_format = request.GET.get('format', 'pdf')
+    date_cutoff = request.GET.get('date_cutoff', '')
+    
+    # Parse date cutoff
+    cutoff_date = None
+    if date_cutoff:
+        try:
+            cutoff_date = datetime.strptime(date_cutoff, '%Y-%m-%d')
+        except ValueError:
+            pass
+    
+    # Prepare data based on report type
+    if report_type == 'all_loans':
+        queryset = Loan.objects.select_related('customer').all()
+        if cutoff_date:
+            queryset = queryset.filter(created_at__lte=cutoff_date)
+        data = _prepare_loan_data(queryset)
+        title = "All Loans Report"
+        
+    elif report_type == 'active_loans':
+        queryset = Loan.objects.select_related('customer').filter(status=Loan.STATUS_ACTIVE)
+        if cutoff_date:
+            queryset = queryset.filter(created_at__lte=cutoff_date)
+        data = _prepare_loan_data(queryset)
+        title = "Active Loans Report"
+        
+    elif report_type == 'closed_loans':
+        queryset = Loan.objects.select_related('customer').filter(status=Loan.STATUS_CLOSED)
+        if cutoff_date:
+            queryset = queryset.filter(created_at__lte=cutoff_date)
+        data = _prepare_loan_data(queryset)
+        title = "Closed Loans Report"
+        
+    elif report_type == 'extended_loans':
+        queryset = Loan.objects.select_related('customer', 'parent_loan').filter(parent_loan__isnull=False)
+        if cutoff_date:
+            queryset = queryset.filter(created_at__lte=cutoff_date)
+        data = _prepare_extended_loan_data(queryset)
+        title = "Extended Loans Report"
+        
+    elif report_type == 'customers':
+        queryset = Customer.objects.all()
+        if cutoff_date:
+            # For customers, we filter by the first loan's creation date
+            queryset = queryset.filter(loans__created_at__lte=cutoff_date).distinct()
+        data = _prepare_customer_data(queryset)
+        title = "Customer Details Report"
+    else:
+        return HttpResponse("Invalid report type", status=400)
+    
+    # Generate report
+    if export_format == 'pdf':
+        return _generate_pdf_report(data, title, date_cutoff)
+    elif export_format == 'excel':
+        return _generate_excel_report(data, title, date_cutoff)
+    else:
+        return HttpResponse("Invalid format", status=400)
+
+
+def _prepare_loan_data(queryset):
+    """Prepare loan data for export"""
+    data = []
+    headers = ['Loan Number', 'Customer Name', 'Customer ID', 'Mobile', 'Lot Number', 
+               'Total Amount (₹)', 'Interest Rate (%)', 'Status', 'Created Date']
+    
+    for loan in queryset:
+        data.append([
+            loan.loan_number,
+            loan.customer.name,
+            loan.customer.customer_id or 'N/A',
+            loan.customer.mobile_primary,
+            loan.lot_number,
+            f"{loan.total_amount:.2f}",
+            f"{loan.interest_rate:.2f}",
+            loan.get_status_display(),
+            loan.created_at.strftime('%d-%b-%Y'),
+        ])
+    
+    return {'headers': headers, 'rows': data}
+
+
+def _prepare_extended_loan_data(queryset):
+    """Prepare extended loan data for export"""
+    data = []
+    headers = ['Loan Number', 'Customer Name', 'Parent Loan', 'Total Amount (₹)', 
+               'Interest Rate (%)', 'Status', 'Created Date']
+    
+    for loan in queryset:
+        data.append([
+            loan.loan_number,
+            loan.customer.name,
+            loan.parent_loan.loan_number if loan.parent_loan else 'N/A',
+            f"{loan.total_amount:.2f}",
+            f"{loan.interest_rate:.2f}",
+            loan.get_status_display(),
+            loan.created_at.strftime('%d-%b-%Y'),
+        ])
+    
+    return {'headers': headers, 'rows': data}
+
+
+def _prepare_customer_data(queryset):
+    """Prepare customer data for export"""
+    data = []
+    headers = ['Customer ID', 'Name', 'Mobile Primary', 'Mobile Secondary', 
+               'Email', 'Address', 'Profession', 'Aadhaar', 'Nominee Name', 'Nominee Mobile']
+    
+    for customer in queryset:
+        data.append([
+            customer.customer_id or 'N/A',
+            customer.name,
+            customer.mobile_primary,
+            customer.mobile_secondary or 'N/A',
+            customer.email or 'N/A',
+            customer.address,
+            customer.profession,
+            customer.aadhaar_number,
+            customer.nominee_name,
+            customer.nominee_mobile,
+        ])
+    
+    return {'headers': headers, 'rows': data}
+
+
+def _generate_excel_report(data, title, date_cutoff):
+    """Generate Excel report using CSV format (compatible without external libraries)"""
+    from django.http import HttpResponse
+    from datetime import datetime
+    
+    response = HttpResponse(content_type='text/csv')
+    filename = f"{title.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    writer = csv.writer(response)
+    
+    # Write metadata
+    writer.writerow([title])
+    writer.writerow([f"Generated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}"])
+    if date_cutoff:
+        writer.writerow([f"Data up to: {date_cutoff}"])
+    writer.writerow([])  # Empty row
+    
+    # Write headers
+    writer.writerow(data['headers'])
+    
+    # Write data rows
+    for row in data['rows']:
+        writer.writerow(row)
+    
+    return response
+
+
+def _generate_pdf_report(data, title, date_cutoff):
+    """Generate PDF report using HTML template and simple rendering"""
+    from django.http import HttpResponse
+    from django.template.loader import render_to_string
+    from datetime import datetime
+    
+    # Try to use xhtml2pdf if available, otherwise fall back to HTML
+    try:
+        from xhtml2pdf import pisa
+        from io import BytesIO
+        
+        context = {
+            'title': title,
+            'generated_date': datetime.now().strftime('%d %B %Y, %I:%M %p'),
+            'date_cutoff': date_cutoff,
+            'headers': data['headers'],
+            'rows': data['rows'],
+        }
+        
+        html = render_to_string('gold_loan/reports/pdf_template.html', context)
+        
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+        
+        if not pdf.err:
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            filename = f"{title.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        else:
+            return HttpResponse("Error generating PDF", status=500)
+            
+    except ImportError:
+        # Fallback: Return HTML that can be printed as PDF
+        context = {
+            'title': title,
+            'generated_date': datetime.now().strftime('%d %B %Y, %I:%M %p'),
+            'date_cutoff': date_cutoff,
+            'headers': data['headers'],
+            'rows': data['rows'],
+        }
+        
+        html = render_to_string('gold_loan/reports/pdf_template.html', context)
+        response = HttpResponse(html, content_type='text/html')
+        return response

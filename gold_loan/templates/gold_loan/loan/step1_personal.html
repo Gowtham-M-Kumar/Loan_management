@@ -1,34 +1,16 @@
-{% extends "gold_loan/base.html" %}
+{% extends "gold_loan/loan/steps_base.html" %}
 {% load static %}
 
-{% block title %}Loan Entry – Step 1{% endblock %}
+{% block step_title %}Step 1 of 5: Customer Details{% endblock %}
+{% block step_description %}Please select an existing customer or provide details for a new onboarding.{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
-{% endblock %}
-
-{% block page_header %}
-<div style="display: flex; align-items: center; gap: 20px;">
-    <a href="{% url 'gold_loan:dashboard' %}" class="btn-back-circle"
-        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
-        title="Back to Dashboard">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-    </a>
-    <h3 style="margin: 0;">Loan Entry – Step 1: Personal Details</h3>
-</div>
-
-{% endblock %}
-
-{% block content %}
+{% block step_content %}
+{% with current_step=1 back_url=None %}
 {% if error %}
 <p style="color:red; font-weight:600; margin-bottom: 15px;">{{ error }}</p>
 {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="loan-form">
+<form method="post" enctype="multipart/form-data" id="stepForm" class="loan-form">
     {% csrf_token %}
     <input type="hidden" name="existing_customer_id" id="existingCustomerId" value="">
     <!-- Preselected ID for auto-selection -->
@@ -36,17 +18,27 @@
 
     <!-- EXISTING CUSTOMER -->
     <div class="card">
-        <h4>Select Existing Customer</h4>
+        <div class="section-header">
+            <h4>Search Existing Customer</h4>
+            <p class="section-helper">Quickly find and select a returning customer by name, mobile, or ID.</p>
+        </div>
         <input type="text" id="customerSearch" placeholder="Search by Name / Mobile / Aadhaar / Customer ID"
             autocomplete="off">
         <div id="searchResults" style="margin-top: 10px;"></div>
     </div>
 
-    <div class="divider">OR</div>
+    <div class="divider"
+        style="text-align: center; margin: 24px 0; color: #70757a; font-weight: 500; position: relative;">
+        <span style="background: white; padding: 0 16px; position: relative; z-index: 1;">OR</span>
+        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e0e0e0;"></div>
+    </div>
 
     <!-- NEW CUSTOMER -->
     <div class="card">
-        <h4>Add New Customer</h4>
+        <div class="section-header">
+            <h4>New Customer Onboarding</h4>
+            <p class="section-helper">Enter the complete details to register a new customer in the system.</p>
+        </div>
 
         <div class="grid-2">
             <input type="text" name="name" value="{{ existing_data.name|default:'' }}" placeholder="Customer Name *"
@@ -127,22 +119,21 @@
                 box-shadow: var(--shadow-sm);">
             </div>
             {% endif %}
-
-
         </div>
-
-    </div>
-
-    <div class="actions" style="margin-top: 24px;">
-        <button type="submit" class="btn-primary" style="width: 100%;">Next →</button>
     </div>
 </form>
+{% endwith %}
+{% endblock %}
 
-
+{% block footer_left %}
+<a href="{% url 'gold_loan:dashboard' %}" class="btn-google btn-google-back">Cancel Flow</a>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // Set step for base template
+    const currentStep = 1;
+
     let searchTimeout;
     let selectedCustomerId = null;
 
@@ -219,6 +210,8 @@
                             <p style="color: #16a34a; font-weight: 600; margin: 0;">Customer selected: ${data.customer.name}</p>
                             <button type="button" onclick="deselectCustomer()" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">✕ Deselect</button>
                         </div>`;
+                    // Clear any temporary photo preview from sessionStorage when an existing customer is selected
+                    sessionStorage.removeItem("customer_photo_preview");
                 }
             })
             .catch(error => {
@@ -247,6 +240,9 @@
         if (photoInput) photoInput.value = '';
         const photoPreview = document.getElementById('photoPreview');
         if (photoPreview) photoPreview.style.display = 'none';
+
+        // Clear sessionStorage when deselecting
+        sessionStorage.removeItem("customer_photo_preview");
 
         // Make fields editable again and restore required attributes
         const inputs = document.querySelectorAll('.card input, .card textarea');
@@ -312,6 +308,13 @@
                 const img = document.getElementById('photoPreviewImg');
                 img.src = e.target.result;
                 preview.style.display = 'block';
+
+                // Save to sessionStorage for persistence across back/forward
+                try {
+                    sessionStorage.setItem("customer_photo_preview", e.target.result);
+                } catch (e) {
+                    console.warn("Could not save to sessionStorage (likely too large):", e);
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -322,11 +325,26 @@
         const preId = document.getElementById('preselectedCustomerId').value;
         if (preId) {
             selectCustomer(preId);
+        } else {
+            // Restore photo preview from sessionStorage if it exists and no existing customer is selected
+            const savedPhoto = sessionStorage.getItem("customer_photo_preview");
+            if (savedPhoto) {
+                const preview = document.getElementById('photoPreview');
+                const img = document.getElementById('photoPreviewImg');
+                if (preview && img) {
+                    img.src = savedPhoto;
+                    preview.style.display = 'block';
+
+                    // If we have a preview, we can temporarily allow passing validation
+                    const photoInput = document.getElementById('customerPhoto');
+                    if (photoInput) photoInput.removeAttribute('required');
+                }
+            }
         }
     });
 
     // Form validation
-    document.querySelector("form").onsubmit = function (e) {
+    document.getElementById("stepForm").onsubmit = function (e) {
         const existingId = document.getElementById('existingCustomerId').value;
 
         // If not existing, check new customer fields
@@ -334,9 +352,14 @@
             const name = document.querySelector("[name='name']").value.trim();
             const mobile = document.querySelector("[name='mobile_primary']").value.trim();
             const aadhaar = document.querySelector("[name='aadhaar_number']").value.trim();
-            const photo = document.getElementById('customerPhoto').files.length;
 
-            if (!name || mobile.length !== 10 || aadhaar.length !== 12 || photo === 0) {
+            // Check if photo is present either in input or as an existing preview
+            const photoInput = document.getElementById('customerPhoto');
+            const photoFiles = photoInput.files.length;
+            const photoPreviewImg = document.getElementById('photoPreviewImg');
+            const hasExistingPhoto = photoPreviewImg && photoPreviewImg.src && !photoPreviewImg.src.endsWith('/');
+
+            if (!name || mobile.length !== 10 || aadhaar.length !== 12 || (photoFiles === 0 && !hasExistingPhoto)) {
                 alert("Please fill all required fields correctly (10-digit mobile, 12-digit Aadhaar, and Photo).");
                 e.preventDefault();
                 return false;

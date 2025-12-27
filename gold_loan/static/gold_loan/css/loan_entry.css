@@ -5,28 +5,180 @@
 
 /* Steps Indicator (Wizard Header) - Optional if exists, styles here */
 
-/* Form Cards */
-.card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    padding: 32px;
+/* Stepper / Progress Indicator */
+.stepper-wrapper {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 700px;
+    position: relative;
+}
+
+.stepper-item {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.stepper-item::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: -1;
+}
+
+.stepper-item:last-child::before {
+    display: none;
+}
+
+.stepper-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #70757a;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stepper-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #70757a;
+    transition: all 0.3s;
+}
+
+.stepper-item.active .stepper-circle {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: white;
+}
+
+.stepper-item.active .stepper-label {
+    color: #1a73e8;
+    font-weight: 600;
+}
+
+.stepper-item.completed .stepper-circle {
+    background: #e8f0fe;
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+/* Section Headers */
+.section-header {
     margin-bottom: 24px;
-    transition: box-shadow var(--transition);
+}
+
+.section-header h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #202124;
+    margin: 0 0 4px 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.section-helper {
+    font-size: 13px;
+    color: #5f6368;
+    margin: 0;
+}
+
+.step-title {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.step-title h2 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #202124;
+    margin-bottom: 8px;
+}
+
+.step-title p {
+    color: #5f6368;
+    font-size: 14px;
+}
+
+/* Form Cards Update */
+.card {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    box-shadow: none;
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: border 0.2s;
 }
 
 .card:focus-within {
-    box-shadow: var(--shadow-md);
+    border-color: #1a73e8;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.30), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
 .card h4 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 24px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 20px;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Fixed Header/Footer Layout */
+.steps-header-fixed {
+    position: sticky;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    background: white;
+    z-index: 800;
+    border-bottom: 1px solid #dadce0;
+    padding: 12px 24px;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+}
+
+.steps-footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: 72px;
+    background: white;
+    border-top: 1px solid #dadce0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    z-index: 1000;
+    box-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.05);
+    transition: left var(--transition-slow);
+}
+
+@media (max-width: 1024px) {
+    .steps-footer-fixed {
+        left: 0;
+        padding: 0 20px;
+    }
+}
+
+.steps-container {
+    max-width: 900px;
+    margin: 24px auto;
+    padding-bottom: 100px;
 }
 
 /* Grid Layouts for Forms */
@@ -99,7 +251,6 @@
     transform: translateY(-1px);
 }
 
-/* Actions (Next/Back) */
 .actions {
     display: flex;
     justify-content: space-between;
@@ -108,7 +259,69 @@
     border-top: 1px solid var(--border-color);
 }
 
-.actions .btn {
+/* Google Material Buttons */
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.25px;
+}
+
+.btn-google:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.btn-google:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-google-next {
+    background-color: #1a73e8;
+    color: #ffffff;
+}
+
+.btn-google-next:hover {
+    background-color: #1765cc;
+}
+
+.btn-google-back {
+    background-color: #ffffff;
+    color: #1a73e8;
+    border: 1px solid #e0e0e0 !important;
+}
+
+.btn-google-back:hover {
+    background-color: #f8f9fa;
+    border-color: #1a73e8 !important;
+}
+
+.btn-google-add {
+    background-color: #ffffff;
+    color: #1a73e8;
+    border: none;
+    gap: 8px;
+}
+
+.btn-google-add:hover {
+    background-color: #f1f3f4;
+}
+
+.btn-google-add svg {
+    width: 18px;
+    height: 18px;
+}
+
+.actions .btn-google {
     min-width: 120px;
 }
 
@@ -156,7 +369,8 @@
         gap: 12px;
     }
 
-    .actions .btn {
+    .actions .btn,
+    .actions .btn-google {
         width: 100%;
     }
 }

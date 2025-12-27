@@ -4,7 +4,7 @@
 {% block title %}Payment - {{ loan.loan_number }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/payment.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/payment.css' %}?v=1.2">
 {% endblock %}
 
 {% block page_header %}
@@ -31,6 +31,104 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Direct Modal Styles to ensure popup behavior */
+    .modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(15, 23, 42, 0.7) !important;
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
+        display: none;
+        /* Controlled by JS */
+        align-items: center;
+        justify-content: center;
+        z-index: 9999 !important;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background: white !important;
+        padding: 30px !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+        max-width: 450px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        position: relative !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .modal-header h3 {
+        margin: 0 0 10px 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .modal-header p {
+        color: #64748b;
+        font-size: 14px;
+        margin: 0 0 20px 0;
+    }
+
+    .payment-verify-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .verify-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .verify-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .verify-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-modal-cancel {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .btn-modal-confirm {
+        flex: 2;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        background: #1e3a8a;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+    }
+</style>
+
 <div class="view-container">
 
     {% if error %}
@@ -131,11 +229,17 @@
     <div class="view-action-footer">
         <div class="footer-form-container" style="display: flex; width: 100%; align-items: center; gap: 20px;">
             <div class="footer-left-actions">
-                <!-- Back button moved to header -->
+                <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-back-footer"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center; height: 48px; min-width: 48px; border-radius: 12px; background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; transition: all 0.2s;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </a>
             </div>
 
             {% if loan.status == 'active' %}
-            <form method="POST" class="footer-form" style="flex: 1; display: flex; align-items: center; gap: 20px;">
+            <form method="POST" id="paymentForm" class="footer-form"
+                style="flex: 1; display: flex; align-items: center; gap: 20px;">
                 {% csrf_token %}
 
                 <div class="footer-info-block" style="min-width: 140px;">
@@ -151,14 +255,14 @@
                 <div class="footer-fields" style="flex: 1; display: flex; gap: 16px; align-items: flex-end;">
                     <div class="f-input-group" style="flex: 1;">
                         <label>Amount (₹)</label>
-                        <input type="number" name="amount" class="f-control"
+                        <input type="number" name="amount" id="amountInput" class="f-control"
                             style="font-weight: 700; color: var(--primary);" min="1" step="0.01" placeholder="0.00"
                             required>
                     </div>
 
                     <div class="f-input-group" style="flex: 1;">
                         <label>Mode</label>
-                        <select name="payment_mode" class="f-control" required>
+                        <select name="payment_mode" id="modeInput" class="f-control" required>
                             <option value="cash">Cash</option>
                             <option value="upi">UPI</option>
                             <option value="bank">Bank</option>
@@ -167,10 +271,12 @@
 
                     <div class="f-input-group" style="flex: 1;">
                         <label>Payment Date</label>
-                        <input type="date" name="payment_date" class="f-control" value="{{ today_date }}" required>
+                        <input type="date" name="payment_date" id="dateInput" class="f-control" value="{{ today_date }}"
+                            required>
                     </div>
 
-                    <button type="submit" class="btn-record" style="height: 48px; min-width: 180px;">Confirm Payment
+                    <button type="button" id="confirmTrigger" class="btn-record"
+                        style="height: 48px; min-width: 180px;">Confirm Payment
                         →</button>
                 </div>
             </form>
@@ -185,10 +291,93 @@
     </div>
 
 </div>
+
+<!-- 🛡️ CONFIRMATION MODAL (Outside main container for better layering) -->
+<div id="paymentModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Payment?</h3>
+            <p>Please review the details before processing the payment record.</p>
+        </div>
+        <div class="modal-body">
+            <div class="payment-verify-card">
+                <div class="verify-row">
+                    <span class="verify-label">Amount</span>
+                    <span class="verify-value" id="verifyAmount">₹ 0.00</span>
+                </div>
+                <div class="verify-row">
+                    <span class="verify-label">Method</span>
+                    <span class="verify-value" id="verifyMode" style="text-transform: uppercase;">-</span>
+                </div>
+                <div class="verify-row">
+                    <span class="verify-label">Date</span>
+                    <span class="verify-value" id="verifyDate">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" id="cancelPayment">No, Edit</button>
+            <button type="button" class="btn-modal-confirm" id="submitPayment">Yes, Proceed</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+
+    // Payment confirmation modal logic
+    const paymentForm = document.getElementById('paymentForm');
+    const confirmTrigger = document.getElementById('confirmTrigger');
+    const paymentModal = document.getElementById('paymentModal');
+    const cancelPayment = document.getElementById('cancelPayment');
+    const submitPayment = document.getElementById('submitPayment');
+
+    // Form inputs
+    const amountInput = document.getElementById('amountInput');
+    const modeInput = document.getElementById('modeInput');
+    const dateInput = document.getElementById('dateInput');
+
+    // Modal displays
+    const verifyAmount = document.getElementById('verifyAmount');
+    const verifyMode = document.getElementById('verifyMode');
+    const verifyDate = document.getElementById('verifyDate');
+
+    if (confirmTrigger) {
+        confirmTrigger.addEventListener('click', function () {
+            // Check form validity first
+            if (!paymentForm.checkValidity()) {
+                paymentForm.reportValidity();
+                return;
+            }
+
+            // Fill verification details
+            verifyAmount.innerText = '₹ ' + parseFloat(amountInput.value).toLocaleString(undefined, { minimumFractionDigits: 2 });
+            verifyMode.innerText = modeInput.value;
+            verifyDate.innerText = dateInput.value;
+
+            // Show modal
+            paymentModal.style.display = 'flex';
+        });
+    }
+
+    cancelPayment.addEventListener('click', () => {
+        paymentModal.style.display = 'none';
+    });
+
+    submitPayment.addEventListener('click', () => {
+        submitPayment.disabled = true;
+        submitPayment.innerText = 'Processing...';
+        paymentForm.submit();
+    });
+
+    // Close modal on outside click
+    window.addEventListener('click', (e) => {
+        if (e.target === paymentModal) {
+            paymentModal.style.display = 'none';
+        }
+    });
+
     async function runSimulation() {
         const daysInput = document.getElementById('simulate-days');
         const days = daysInput.value;

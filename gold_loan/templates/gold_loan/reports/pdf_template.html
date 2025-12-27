@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .header .meta {
+            font-size: 12px;
+            color: #64748b;
+            margin: 5px 0;
+        }
+
+        .company-name {
+            font-size: 14px;
+            color: #0f172a;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 11px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #667eea;
+        }
+
+        td {
+            padding: 10px 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="company-name">Punnagai Gold Loan</div>
+        <h1>{{ title }}</h1>
+        <div class="meta">Generated: {{ generated_date }}</div>
+        {% if date_cutoff %}
+        <div class="meta">Data up to: {{ date_cutoff }}</div>
+        {% endif %}
+    </div>
+
+    {% if rows %}
+    <table>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">No data available for the selected criteria.</div>
+    {% endif %}
+
+    <div class="footer">
+        <p>This is a computer-generated report from Punnagai Gold Loan Management System</p>
+        <p>© 2025 Punnagai Gold Loan. All rights reserved.</p>
+    </div>
+</body>
+
+</html>

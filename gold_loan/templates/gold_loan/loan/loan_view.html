@@ -43,9 +43,11 @@
                 style="border-color: #059669; color: #059669;">
                 Closure Receipt
             </a>
+            {% if not has_been_extended %}
             <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn btn-secondary">
                 Extend Loan
             </a>
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -59,10 +61,6 @@
     <div class="section-card">
         <div class="section-header">
             <h4 class="section-title">Customer Details</h4>
-            <a href="{% url 'gold_loan:customer_edit' customer.id %}" class="btn btn-secondary"
-                style="font-size: 13px; padding: 4px 12px; border-color: #2563eb; color: #2563eb;">
-                Edit Customer
-            </a>
         </div>
         <div class="section-body">
             <div style="display: flex; gap: 20px; align-items: start;">
@@ -239,7 +237,6 @@
                     <tr>
                         <th style="width: 50px;">#</th>
                         <th>Item Name</th>
-                        <th>Carat</th>
                         <th>Gross Wt</th>
                         <th style="color: var(--primary);">Net Wt</th>
                         <th>Pieces</th>
@@ -252,8 +249,6 @@
                     <tr>
                         <td style="color: var(--text-muted); font-size: 11px;">{{ forloop.counter }}</td>
                         <td style="font-weight: 600; color: var(--text-primary);">{{ item.item_name }}</td>
-                        <td><span style="font-size: 12px; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{
-                                item.get_carat_display }}</span></td>
                         <td class="amount-cell">{{ item.gross_weight }}g</td>
                         <td class="amount-cell" style="color: var(--primary);">{{ item.approved_net_weight }}g</td>
                         <td style="font-weight: 600;">{{ item.bundle.item_count|default:"1" }}</td>
@@ -355,7 +350,7 @@
             </a>
             {% endif %}
 
-            {% if loan.status == 'closed' %}
+            {% if loan.status == 'closed' and not has_been_extended %}
             <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn-footer btn-f-warning">
                 Extend Loan
             </a>

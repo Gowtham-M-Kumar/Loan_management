@@ -1,168 +1,163 @@
-{% extends "gold_loan/base.html" %}
+{% extends "gold_loan/loan/steps_base.html" %}
 {% load static %}
 
-{% block title %}Loan Entry – Step 4{% endblock %}
+{% block step_title %}Step 4 of 5: Documentation{% endblock %}
+{% block step_description %}Upload necessary identification documents to verify the loan application.{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
-{% endblock %}
-
-{% block page_header %}
-<div style="display: flex; align-items: center; gap: 20px;">
-    <a href="{% url 'gold_loan:loan_entry_step3' %}" class="btn-back-circle"
-        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
-        title="Back to Step 3">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-    </a>
-    <h3 style="margin: 0;">Loan Entry – Step 4: Documents</h3>
-</div>
-
-{% endblock %}
-
-{% block content %}
-<form method="post" enctype="multipart/form-data" class="loan-form">
+{% block step_content %}
+{% with current_step=4 back_url="/loan/entry/step-3/" %}
+<form method="post" enctype="multipart/form-data" id="stepForm" class="loan-form">
     {% csrf_token %}
 
-    {% if documents %}
-    {% for doc in documents %}
-    <!-- DOCUMENT ROW (Existing) -->
-    <div class="card document-row" data-doc-index="{{ forloop.counter0 }}"
-        data-has-image="{% if doc.image %}true{% else %}false{% endif %}">
-        <h4>Document</h4>
-
-        <div class="grid-3">
-            <select name="document_type[]" required>
-                <option value="">Document Type *</option>
-                <option value="aadhaar" {% if doc.document_type=='aadhaar' %}selected{% endif %}>Aadhaar</option>
-                <option value="pan" {% if doc.document_type=='pan' %}selected{% endif %}>PAN</option>
-                <option value="photo" {% if doc.document_type=='photo' %}selected{% endif %}>Photo</option>
-                <option value="other" {% if doc.document_type=='other' %}selected{% endif %}>Other</option>
-            </select>
-
-            <input type="text" name="other_document_name[]" value="{{ doc.other_name|default:'' }}"
-                placeholder="Other Document Name (if Other)">
-
-            <div class="file-box"
-                style="margin-top: 0; padding: 10px; height: 100%; display:flex; flex-direction:column; justify-content:center;">
-                <span style="font-size: 13px; margin-bottom: 8px; font-weight:500;">Upload / Photo</span>
-
-                <div class="media-buttons" style="gap:6px;">
-                    <button type="button" class="btn-media camera open-camera"
-                        data-target="document_image_{{ forloop.counter0 }}" style="padding:6px 10px; font-size:12px;">
-                        Camera
-                    </button>
-                    <button type="button" class="btn-media btn-upload"
-                        onclick="document.getElementById('document_image_{{ forloop.counter0 }}').click()"
-                        style="padding:6px 10px; font-size:12px;">
-                        Upload
-                    </button>
-                </div>
-
-                <input type="file" name="document_image[]" id="document_image_{{ forloop.counter0 }}" accept="image/*"
-                    capture="environment" onchange="previewDocument(this, '{{ forloop.counter0 }}')"
-                    style="display:none;">
+    <div id="docs-container">
+        {% if documents %}
+        {% for doc in documents %}
+        <!-- DOCUMENT ROW (Existing) -->
+        <div class="card document-row" data-doc-index="{{ forloop.counter0 }}"
+            data-has-image="{% if doc.image %}true{% else %}false{% endif %}">
+            <div class="section-header">
+                <h4>Document Details</h4>
+                <p class="section-helper">Select a document type and upload a clear photo or digital copy.</p>
             </div>
-        </div>
-
-        <!-- Document Preview -->
-        {% if doc.image %}
-        <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}" style="margin-top: 10px;">
-            {% else %}
-            <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}" style="margin-top: 10px; display: none;">
-                {% endif %}
-                <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
-                <div class="doc-preview-content">
-                    {% if doc.image %}
-                    <div style="position: relative; display: inline-block;">
-                        <img src="{{ MEDIA_URL }}{{ doc.image }}"
-                            style="max-width: 150px; max-height: 150px; border-radius: 4px; border: 2px solid #e5e7eb;">
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- DELETE BUTTON -->
-            <button type="button" class="btn-secondary">
-                Remove Document
-            </button>
-        </div>
-        {% endfor %}
-        {% else %}
-        <!-- DOCUMENT ROW (Default Empty) -->
-        <div class="card document-row" data-doc-index="0">
-            <h4>Document</h4>
 
             <div class="grid-3">
                 <select name="document_type[]" required>
                     <option value="">Document Type *</option>
-                    <option value="aadhaar">Aadhaar</option>
-                    <option value="pan">PAN</option>
-                    <option value="photo">Photo</option>
-                    <option value="other">Other</option>
+                    <option value="aadhaar" {% if doc.document_type == 'aadhaar' %}selected{% endif %}>Aadhaar</option>
+                    <option value="pan" {% if doc.document_type == 'pan' %}selected{% endif %}>PAN</option>
+                    <option value="photo" {% if doc.document_type == 'photo' %}selected{% endif %}>Photo</option>
+                    <option value="other" {% if doc.document_type == 'other' %}selected{% endif %}>Other</option>
                 </select>
 
-                <input type="text" name="other_document_name[]" placeholder="Other Document Name (if Other)">
+                <input type="text" name="other_document_name[]" value="{{ doc.other_name|default:'' }}"
+                    placeholder="Other Document Name (if Other)">
 
                 <div class="file-box"
                     style="margin-top: 0; padding: 10px; height: 100%; display:flex; flex-direction:column; justify-content:center;">
                     <span style="font-size: 13px; margin-bottom: 8px; font-weight:500;">Upload / Photo</span>
 
                     <div class="media-buttons" style="gap:6px;">
-                        <button type="button" class="btn-media camera open-camera" data-target="document_image_0"
+                        <button type="button" class="btn-media camera open-camera"
+                            data-target="document_image_{{ forloop.counter0 }}"
                             style="padding:6px 10px; font-size:12px;">
-                            📷 Camera
+                            Camera
                         </button>
                         <button type="button" class="btn-media btn-upload"
-                            onclick="document.getElementById('document_image_0').click()"
+                            onclick="document.getElementById('document_image_{{ forloop.counter0 }}').click()"
                             style="padding:6px 10px; font-size:12px;">
-                            📂 Upload
+                            Upload
                         </button>
                     </div>
 
-                    <input type="file" name="document_image[]" id="document_image_0" accept="image/*"
-                        capture="environment" onchange="previewDocument(this, '0')" style="display:none;">
+                    <input type="file" name="document_image[]" id="document_image_{{ forloop.counter0 }}"
+                        accept="image/*" capture="environment"
+                        onchange="previewDocument(this, '{{ forloop.counter0 }}')" style="display:none;">
                 </div>
             </div>
 
             <!-- Document Preview -->
-            <div class="doc-preview" id="doc_preview_0" style="display: none; margin-top: 10px;">
-                <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
-                <div class="doc-preview-content"></div>
-            </div>
+            {% if doc.image %}
+            <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}" style="margin-top: 10px;">
+                {% else %}
+                <div class="doc-preview" id="doc_preview_{{ forloop.counter0 }}"
+                    style="margin-top: 10px; display: none;">
+                    {% endif %}
+                    <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+                    <div class="doc-preview-content">
+                        {% if doc.image %}
+                        <div style="position: relative; display: inline-block;">
+                            <img src="{{ MEDIA_URL }}{{ doc.image }}"
+                                style="max-width: 150px; max-height: 150px; border-radius: 4px; border: 2px solid #e5e7eb;">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
 
-            <!-- DELETE BUTTON -->
-            <button type="button" class="btn-secondary">
-                Remove Document
-            </button>
+                <!-- DELETE BUTTON -->
+                <button type="button" class="btn-google btn-google-back remove-doc" style="margin-top: 16px;">
+                    Remove Document
+                </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <!-- DOCUMENT ROW (Default Empty) -->
+            <div class="card document-row" data-doc-index="0">
+                <div class="section-header">
+                    <h4>Document Details</h4>
+                    <p class="section-helper">Select a document type and upload a clear photo or digital copy.</p>
+                </div>
+
+                <div class="grid-3">
+                    <select name="document_type[]" required>
+                        <option value="">Document Type *</option>
+                        <option value="aadhaar">Aadhaar</option>
+                        <option value="pan">PAN</option>
+                        <option value="photo">Photo</option>
+                        <option value="other">Other</option>
+                    </select>
+
+                    <input type="text" name="other_document_name[]" placeholder="Other Document Name (if Other)">
+
+                    <div class="file-box"
+                        style="margin-top: 0; padding: 10px; height: 100%; display:flex; flex-direction:column; justify-content:center;">
+                        <span style="font-size: 13px; margin-bottom: 8px; font-weight:500;">Upload / Photo</span>
+
+                        <div class="media-buttons" style="gap:6px;">
+                            <button type="button" class="btn-media camera open-camera" data-target="document_image_0"
+                                style="padding:6px 10px; font-size:12px;">
+                                📷 Camera
+                            </button>
+                            <button type="button" class="btn-media btn-upload"
+                                onclick="document.getElementById('document_image_0').click()"
+                                style="padding:6px 10px; font-size:12px;">
+                                📂 Upload
+                            </button>
+                        </div>
+
+                        <input type="file" name="document_image[]" id="document_image_0" accept="image/*"
+                            capture="environment" onchange="previewDocument(this, '0')" style="display:none;">
+                    </div>
+                </div>
+
+                <!-- Document Preview -->
+                <div class="doc-preview" id="doc_preview_0" style="display: none; margin-top: 10px;">
+                    <p style="font-weight: 600; margin-bottom: 5px;">Preview:</p>
+                    <div class="doc-preview-content"></div>
+                </div>
+
+                <!-- DELETE BUTTON -->
+                <button type="button" class="btn-google btn-google-back remove-doc" style="margin-top: 16px;">
+                    Remove Document
+                </button>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
 
         <!-- ADD DOCUMENT -->
-        <button type="button" class="btn-secondary add-row">
+        <button type="button" class="btn-google btn-google-add add-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
             Add Another Document
         </button>
 
         <!-- NOTE -->
-        <p style="margin-top: 10px; color: #6b7280; font-size: 14px;">
+        <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
             At least one document is required to proceed.
         </p>
-
-        <!-- ACTIONS -->
-        <div class="actions">
-            <a href="{% url 'gold_loan:loan_entry_step3' %}" class="btn-secondary">
-                ← Back
-            </a>
-            <button type="submit" class="btn-primary">
-                Next →
-            </button>
-        </div>
 </form>
+{% endwith %}
+{% endblock %}
 
+{% block footer_left %}
+<a href="{% url 'gold_loan:loan_entry_step3' %}" class="btn-google btn-google-back">← Back</a>
+{% endblock %}
+
+{% block scripts %}
 <script>
+    const currentStep = 4;
     let docIndex = parseInt("{{ documents|length|default:1 }}");
 
     // Master file storage for documents
@@ -281,7 +276,7 @@
         previewContainer.style.display = 'none';
         previewContainer.querySelector('.doc-preview-content').innerHTML = '';
 
-        clone.querySelector(".btn-secondary").onclick = function () {
+        clone.querySelector(".remove-doc").onclick = function () {
             const allDocs = document.querySelectorAll(".document-row");
             if (allDocs.length > 1) {
                 clone.remove();
@@ -291,23 +286,27 @@
             }
         };
 
-        this.parentNode.insertBefore(clone, this);
+        const docsContainer = document.getElementById("docs-container");
+        docsContainer.appendChild(clone);
         docIndex++;
     };
 
     // Remove first document
-    document.querySelector(".document-row .btn-secondary").onclick = function () {
-        const allDocs = document.querySelectorAll(".document-row");
-        if (allDocs.length > 1) {
-            this.closest(".document-row").remove();
-            delete docFileStores[this.closest(".document-row").getAttribute('data-doc-index')];
-        } else {
-            alert("At least one document is required");
-        }
-    };
+    document.querySelectorAll(".remove-doc").forEach(btn => {
+        btn.onclick = function () {
+            const allDocs = document.querySelectorAll(".document-row");
+            if (allDocs.length > 1) {
+                const row = this.closest(".document-row");
+                delete docFileStores[row.getAttribute('data-doc-index')];
+                row.remove();
+            } else {
+                alert("At least one document is required");
+            }
+        };
+    });
 
     // Form submission validation
-    document.querySelector("form").onsubmit = function (e) {
+    document.getElementById("stepForm").onsubmit = function (e) {
         const rows = document.querySelectorAll(".document-row");
         let isValid = true;
 

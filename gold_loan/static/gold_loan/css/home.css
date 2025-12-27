@@ -1137,3 +1137,66 @@
         text-align: center;
     }
 }
+
+/* --- Analytics Section (Replaces Calculator) --- */
+.analytics-section {
+    position: relative;
+    background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url('../images/trust_image.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    border-top: none;
+    /* Removed border to blend if adjacent */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 32px;
+    margin-top: 40px;
+}
+
+.analytics-card {
+    background: rgba(255, 255, 255, 0.7);
+    /* Glass effect */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.85);
+    /* Slightly more opaque on hover */
+}
+
+.card-header {
+    margin-bottom: 24px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 16px;
+}
+
+.card-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+}
+
+.card-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+}

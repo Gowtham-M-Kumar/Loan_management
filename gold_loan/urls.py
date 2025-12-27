@@ -9,6 +9,9 @@ urlpatterns = [
     
     # Dashboard
     path("dashboard/", views.dashboard, name="dashboard"),
+    
+    # Analytics Dashboard
+    path("analytics/", views.analytics_dashboard, name="analytics_dashboard"),
 
     # Loan Entry (redirect to step 1)
     path("loan/", views.loan_entry, name="loan_entry"),
@@ -19,6 +22,7 @@ urlpatterns = [
     path("loan/entry/step-3/", views.loan_entry_step3, name="loan_entry_step3"),
     path("loan/entry/step-4/", views.loan_entry_step4, name="loan_entry_step4"),
     path("loan/entry/step-5/", views.loan_entry_step5, name="loan_entry_step5"),
+    path("api/resend-otp/", views.resend_otp_api, name="resend_otp_api"),
 
     # Other Pages
     # Payment
@@ -27,6 +31,7 @@ urlpatterns = [
     path("closed-loans/", views.closed_loans_list, name="closed_loans_list"),
     path("extended-loans/", views.extended_loans_list, name="extended_loans_list"),
     path("customers/", views.customer_list, name="customer_list"),
+    path("customers/create/", views.customer_create, name="customer_create"),
     path("customers/<int:customer_id>/", views.customer_detail, name="customer_detail"),
     path("customers/<int:customer_id>/edit/", views.customer_edit, name="customer_edit"),
     path("close/", views.loan_close, name="loan_close"),
@@ -53,5 +58,8 @@ urlpatterns = [
     path("loan/<int:loan_id>/extend-otp/", views.loan_extend_otp, name="loan_extend_otp"),
     path("loan/<int:loan_id>/extend-action/", views.loan_extend_action, name="loan_extend_action"),
     path("api/loan/<int:loan_id>/simulate-interest/", views.simulate_interest, name="simulate_interest"),
+    
+    # Reports
+    path("analytics/export/", views.export_report, name="export_report"),
 ]
 

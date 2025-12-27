@@ -1,0 +1,68 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
+{% block step_head %}{% endblock %}
+{% endblock %}
+
+{% block page_header %}
+<div class="steps-header-fixed">
+    <div class="stepper-wrapper">
+        <div
+            class="stepper-item {% if current_step >= 1 %}completed{% endif %} {% if current_step == 1 %}active{% endif %}">
+            <div class="stepper-circle">{% if current_step > 1 %}✓{% else %}1{% endif %}</div>
+            <div class="stepper-label">Customer</div>
+        </div>
+        <div
+            class="stepper-item {% if current_step >= 2 %}completed{% endif %} {% if current_step == 2 %}active{% endif %}">
+            <div class="stepper-circle">{% if current_step > 2 %}✓{% else %}2{% endif %}</div>
+            <div class="stepper-label">Items</div>
+        </div>
+        <div
+            class="stepper-item {% if current_step >= 3 %}completed{% endif %} {% if current_step == 3 %}active{% endif %}">
+            <div class="stepper-circle">{% if current_step > 3 %}✓{% else %}3{% endif %}</div>
+            <div class="stepper-label">Loan</div>
+        </div>
+        <div
+            class="stepper-item {% if current_step >= 4 %}completed{% endif %} {% if current_step == 4 %}active{% endif %}">
+            <div class="stepper-circle">{% if current_step > 4 %}✓{% else %}4{% endif %}</div>
+            <div class="stepper-label">Docs</div>
+        </div>
+        <div
+            class="stepper-item {% if current_step >= 5 %}completed{% endif %} {% if current_step == 5 %}active{% endif %}">
+            <div class="stepper-circle">{% if current_step > 5 %}✓{% else %}5{% endif %}</div>
+            <div class="stepper-label">Verify</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="steps-container">
+    <div class="step-title">
+        <h2>{% block step_title %}{% endblock %}</h2>
+        <p>{% block step_description %}{% endblock %}</p>
+    </div>
+
+    {% block step_content %}{% endblock %}
+</div>
+
+<div class="steps-footer-fixed">
+    <div class="footer-left">
+        {% block footer_left %}
+        {% if back_url %}
+        <a href="{{ back_url }}" class="btn-google btn-google-back">← Back</a>
+        {% endif %}
+        {% endblock %}
+    </div>
+
+    <div class="footer-right">
+        {% block footer_right %}
+        <button type="submit" form="stepForm" class="btn-google btn-google-next">
+            {% if current_step == 5 %}Finish & Save{% else %}Next →{% endif %}
+        </button>
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}

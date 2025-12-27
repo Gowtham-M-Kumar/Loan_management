@@ -1,83 +1,70 @@
-{% extends "gold_loan/base.html" %}
+{% extends "gold_loan/loan/steps_base.html" %}
 {% load static %}
 
-{% block title %}Loan Entry – OTP Verification{% endblock %}
+{% block step_title %}Step 5 of 5: Identity Verification{% endblock %}
+{% block step_description %}Please enter the 6-digit OTP sent to the registered mobile number to finalize the
+application.{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{% static 'gold_loan/css/loan_entry.css' %}">
-{% endblock %}
-
-{% block page_header %}
-<div style="display: flex; align-items: center; gap: 20px;">
-    <a href="{% url 'gold_loan:loan_entry_step4' %}" class="btn-back-circle"
-        style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; color: #6b7280; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
-        title="Back to Step 4">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-    </a>
-    <h3 style="margin: 0;">OTP Verification</h3>
-</div>
-
-{% endblock %}
-
-{% block content %}
-<form method="post" class="loan-form otp-box" id="otpForm">
-    {% csrf_token %}
-
-    <p>Enter OTP sent to admin and customer</p>
-
+{% block step_content %}
+{% with current_step=5 back_url="/loan/entry/step-4/" %}
+<div class="otp-box">
     {% if error %}
-    <p style="color:red; font-weight:600;">{{ error }}</p>
+    <div class="alert alert-error" style="margin-bottom: 20px;">
+        {{ error }}
+    </div>
     {% endif %}
 
-    <input type="text" name="otp" id="otpInput" maxlength="6" placeholder="Enter 6-digit OTP" required>
+    <form method="post" class="loan-form" id="stepForm">
+        {% csrf_token %}
+        <input type="text" name="otp" id="otpInput" maxlength="6" placeholder="Enter 6-digit OTP" required>
 
-    <div class="actions" style="margin-top: 24px;">
-        <button type="submit" class="btn-primary" style="width: 100%;">
-            Verify & Save
-        </button>
-        <button type="button" class="btn-secondary" id="resendOtp" style="width: 100%; margin-top: 12px;">
-            Resend OTP
-        </button>
-    </div>
-</form>
+        <div style="margin-top: 20px;">
+            <p style="color: #5f6368; font-size: 14px;">Didn't receive the code?</p>
+            <button type="button" class="btn-google btn-google-back" id="resendOtp" style="border: none;">
+                Resend OTP
+            </button>
+        </div>
+    </form>
+</div>
+{% endwith %}
+{% endblock %}
 
+{% block footer_left %}
+<a href="{% url 'gold_loan:loan_entry_step4' %}" class="btn-google btn-google-back">← Back</a>
+{% endblock %}
+
+{% block scripts %}
 <script>
-    /*
-     TEMP OTP LOGIC (as requested)
-     --------------------------------
-     Valid OTP = 123456
-     Checked in JS first
-     Backend also checks same value
-    */
+    const currentStep = 5;
 
-    document.getElementById("otpForm").addEventListener("submit", function (e) {
-        const otp = document.getElementById("otpInput").value;
+    document.getElementById('resendOtp').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerText = 'Resending...';
 
-        console.log("Entered OTP:", otp);
-
-        if (otp.length !== 6 || !/^\d+$/.test(otp)) {
-            e.preventDefault();
-            alert("OTP must be exactly 6 digits");
-            return;
-        }
-
-        if (otp !== "123456") {
-            e.preventDefault();
-            alert("Invalid OTP (use 123456 for now)");
-            return;
-        }
-
-        console.log("OTP verified successfully");
-        // form submits to Django backend
+        fetch("{% url 'gold_loan:resend_otp_api' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP has been resent successfully.');
+                } else {
+                    alert('Error resending OTP: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = 'Resend OTP';
+            });
     });
 
-    document.getElementById("resendOtp").addEventListener("click", function () {
-        console.log("OTP resent to admin & customer (mock)");
-        alert("OTP resent successfully (check console)");
+    // Cleanup sessionStorage upon successful form submission
+    document.getElementById('stepForm').addEventListener('submit', function () {
+        sessionStorage.removeItem("customer_photo_preview");
     });
 </script>
 {% endblock %}

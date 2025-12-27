@@ -1,0 +1,443 @@
+{% extends "gold_loan/base.html" %}
+{% load static %}
+
+{% block title %}Analytics & Reports - Punnagai Gold Loan{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'gold_loan/css/analytics.css' %}">
+<link rel="stylesheet" href="{% static 'gold_loan/css/reports.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+
+    <!-- Page Header -->
+    <div class="analytics-header">
+        <div>
+            <h1 class="page-title">Analytics & Reports</h1>
+            <p class="page-subtitle">Comprehensive system overview and performance metrics</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-refresh" onclick="location.reload()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="section-title">System Overview</div>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Total Customers</div>
+                <div class="metric-value">{{ total_customers }}</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Total Loans</div>
+                <div class="metric-value">{{ total_loans }}</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Active Loans</div>
+                <div class="metric-value">{{ active_loans_count }}</div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <div class="metric-content">
+                <div class="metric-label">Closed Loans</div>
+                <div class="metric-value">{{ closed_loans_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Metrics -->
+    <div class="section-title">Financial Overview</div>
+    <div class="financial-grid">
+        <div class="financial-card">
+            <div class="financial-header">
+                <div class="financial-icon" style="background: #10b981;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="financial-label">Total Disbursed</div>
+            </div>
+            <div class="financial-value">₹{{ total_disbursed|floatformat:2 }}</div>
+        </div>
+
+        <div class="financial-card">
+            <div class="financial-header">
+                <div class="financial-icon" style="background: #3b82f6;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </div>
+                <div class="financial-label">Total Recovered</div>
+            </div>
+            <div class="financial-value">₹{{ total_recovered|floatformat:2 }}</div>
+        </div>
+
+        <div class="financial-card">
+            <div class="financial-header">
+                <div class="financial-icon" style="background: #f59e0b;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <div class="financial-label">Outstanding Principal</div>
+            </div>
+            <div class="financial-value">₹{{ total_active_principal|floatformat:2 }}</div>
+        </div>
+
+        <!-- <div class="financial-card">
+            <div class="financial-header">
+                <div class="financial-icon" style="background: #ef4444;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div class="financial-label">Pending Interest</div>
+            </div>
+            <div class="financial-value">₹{{ total_pending_interest|floatformat:2 }}</div>
+        </div> -->
+    </div>
+
+    <!-- Reports Section -->
+    <div class="report-section">
+        <div class="report-header">
+            <h3>Export Reports</h3>
+            <p>Generate PDF or Excel reports with custom date filters</p>
+        </div>
+
+        <form action="{% url 'gold_loan:export_report' %}" method="GET" class="report-controls" target="_blank">
+            <div class="form-group">
+                <label class="form-label">Report Type</label>
+                <select name="report_type" class="form-select">
+                    <option value="all_loans">All Loans</option>
+                    <option value="active_loans">Active Loans</option>
+                    <option value="closed_loans">Closed Loans</option>
+                    <option value="extended_loans">Extended Loans</option>
+                    <option value="customers">Customer Details</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Data Up To (Optional)</label>
+                <input type="date" name="date_cutoff" class="form-input" max="{% now 'Y-m-d' %}">
+            </div>
+
+            <button type="submit" name="format" value="pdf" class="btn-export btn-pdf">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M16 13H8"></path>
+                    <path d="M16 17H8"></path>
+                    <path d="M10 9H8"></path>
+                </svg>
+                Export PDF
+            </button>
+
+            <button type="submit" name="format" value="excel" class="btn-export btn-excel">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M8 13l8 4"></path>
+                    <path d="M16 13l-8 4"></path>
+                </svg>
+                Export Excel
+            </button>
+        </form>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Loan Status Distribution -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Loan Status Distribution</h3>
+                <p>Current breakdown of all loans</p>
+            </div>
+            <div class="chart-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Daily Trend -->
+        <div class="chart-card chart-wide">
+            <div class="chart-header">
+                <h3>Daily Loan Creation Trend</h3>
+                <p>Last 30 days activity</p>
+            </div>
+            <div class="chart-body">
+                <canvas id="dailyTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trend -->
+    <div class="chart-card chart-full">
+        <div class="chart-header">
+            <h3>Monthly Loan Creation Trend</h3>
+            <p>Last 12 months overview</p>
+        </div>
+        <div class="chart-body">
+            <canvas id="monthlyTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Customers & Recent Activity -->
+    <div class="bottom-grid">
+        <!-- Top Customers -->
+        <div class="list-card">
+            <div class="list-header">
+                <h3>Top Customers</h3>
+                <p>By loan count</p>
+            </div>
+            <div class="list-body">
+                {% for customer in top_customers %}
+                <div class="list-item">
+                    <div class="list-item-avatar">
+                        {% if customer.photo %}
+                        <img src="{{ customer.photo.url }}" alt="{{ customer.name }}"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        {% else %}
+                        {{ customer.name|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-name">{{ customer.name }}</div>
+                        <div class="list-item-meta">{{ customer.customer_id }}</div>
+                    </div>
+                    <div class="list-item-badge">
+                        {{ customer.loan_count }} loan{{ customer.loan_count|pluralize }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">No customers yet</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="list-card">
+            <div class="list-header">
+                <h3>Recent Loans</h3>
+                <p>Latest 10 entries</p>
+            </div>
+            <div class="list-body">
+                {% for loan in recent_loans %}
+                <div class="list-item">
+                    <div class="list-item-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        </svg>
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-name">{{ loan.loan_number }}</div>
+                        <div class="list-item-meta">{{ loan.customer.name }}</div>
+                    </div>
+                    <div class="list-item-status status-{{ loan.status }}">
+                        {{ loan.get_status_display }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">No loans yet</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Data Passing -->
+    {{ status_chart_data|json_script:"status-data" }}
+    {{ daily_chart_data|json_script:"daily-data" }}
+    {{ monthly_chart_data|json_script:"monthly-data" }}
+
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Global Chart.js config
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#64748b';
+
+        // Helper function to safely parse JSON
+        const getChartData = (id) => {
+            try {
+                return JSON.parse(document.getElementById(id).textContent);
+            } catch (e) {
+                console.error(`Error parsing data for ${id}:`, e);
+                return { labels: [], data: [] };
+            }
+        };
+
+        const statusData = getChartData('status-data');
+        const dailyData = getChartData('daily-data');
+        const monthlyData = getChartData('monthly-data');
+
+        /* ================================
+           Status Distribution (Doughnut)
+        ================================= */
+        const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.labels,
+                    datasets: [{
+                        data: statusData.data,
+                        backgroundColor: ['#4facfe', '#43e97b', '#f093fb'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 13 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* ================================
+           Daily Trend (Line Chart)
+        ================================= */
+        const dailyCtx = document.getElementById('dailyTrendChart')?.getContext('2d');
+
+        if (dailyCtx) {
+            new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: dailyData.labels,
+                    datasets: [{
+                        label: 'Loans Created',
+                        data: dailyData.data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        /* ================================
+           Monthly Trend (Bar Chart)
+        ================================= */
+        const monthlyCtx = document.getElementById('monthlyTrendChart')?.getContext('2d');
+
+        if (monthlyCtx) {
+            new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [{
+                        label: 'Loans Created',
+                        data: monthlyData.data,
+                        backgroundColor: 'rgba(67, 233, 123, 0.8)',
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

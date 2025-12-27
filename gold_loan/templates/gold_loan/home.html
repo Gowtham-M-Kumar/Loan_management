@@ -5,6 +5,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'gold_loan/css/home.css' %}?v=3.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 {% endblock %}
 
 {% block page_header %}{% endblock %}
@@ -220,62 +221,53 @@
         </div>
     </section>
 
-    <!-- SECTION 3: GOLD LOAN CALCULATOR -->
-    <section class="section calculator-section" id="calculator">
+    <!-- SECTION 3: ANALYTICS SNAPSHOT -->
+    <section class="section analytics-section" id="analytics">
         <div class="container">
             <div class="section-header center animate-on-scroll">
-                <span class="section-badge">Plan Ahead</span>
-                <h2>Gold Loan Calculator</h2>
-                <p>Estimate your loan amount based on current gold rates.</p>
+                <span class="section-badge">Live Insights</span>
+                <h2>Operations Overview</h2>
+                <p>Real-time snapshot of loan performance and trends.</p>
             </div>
 
-            <div class="calculator-card animate-on-scroll delay-1">
-                <div class="calc-inputs">
-                    <!-- Gold Weight -->
-                    <div class="input-group">
-                        <div class="label-row">
-                            <label>Gold Weight (grams)</label>
-                            <input type="number" id="weightInput" value="50" min="1" max="500">
-                        </div>
-                        <input type="range" id="weightSlider" min="1" max="500" value="50" class="range-slider">
+            <div class="analytics-grid animate-on-scroll delay-1">
+                <!-- Loan Status Distribution -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Loan Status Distribution</h3>
+                        <p>Current breakdown of all loans</p>
                     </div>
-
-                    <!-- Interest Rate -->
-                    <div class="input-group">
-                        <div class="label-row">
-                            <label>Interest Rate (% per annum)</label>
-                            <input type="number" id="rateInput" value="12" min="1" max="36" step="0.5">
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="statusChart"></canvas>
                         </div>
-                        <input type="range" id="rateSlider" min="1" max="36" step="0.5" value="12" class="range-slider">
-                    </div>
-
-                    <!-- Tenure -->
-                    <div class="input-group">
-                        <div class="label-row">
-                            <label>Tenure (Months)</label>
-                            <input type="number" id="tenureInput" value="6" min="1" max="24">
-                        </div>
-                        <input type="range" id="tenureSlider" min="1" max="24" value="6" class="range-slider">
                     </div>
                 </div>
 
-                <div class="calc-result">
-                    <div class="result-box">
-                        <span class="label">Estimated Loan Amount</span>
-                        <div class="amount-wrap">
-                            <span class="currency">₹</span>
-                            <span class="value" id="loanAmount">2,00,000</span>
+                <!-- Daily Loan Creation Trend -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Daily Loan Creation Trend</h3>
+                        <p>New loans over the last 30 days</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="dailyChart"></canvas>
                         </div>
-                        <p class="disclaimer">* Indicative value based on market rate. Final value may vary.</p>
-                        <a href="{% url 'gold_loan:loan_entry_step1' %}" class="btn btn-primary btn-block btn-lg"
-                            style="text-decoration: none;">
-                            Apply for this Loan
-                        </a>
                     </div>
                 </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="{% url 'gold_loan:analytics_dashboard' %}" class="btn btn-secondary btn-lg">
+                    View Full Analytics Report
+                </a>
             </div>
         </div>
     </section>
+
+    {{ status_chart_data|json_script:"status-data" }}
+    {{ daily_chart_data|json_script:"daily-data" }}
 
     <!-- SECTION 4: TRUST METRICS / STATS -->
     <section class="section stats-section">
@@ -402,50 +394,103 @@
         });
 
 
-        // --- Calculator Logic ---
-        const weightSlider = document.getElementById('weightSlider');
-        const weightInput = document.getElementById('weightInput');
-        const rateSlider = document.getElementById('rateSlider');
-        const rateInput = document.getElementById('rateInput');
-        const tenureSlider = document.getElementById('tenureSlider');
-        const tenureInput = document.getElementById('tenureInput');
-        const loanAmountDisplay = document.getElementById('loanAmount');
+        // --- Analytics Charts Initialization ---
+        const statusDataEl = document.getElementById('status-data');
+        const dailyDataEl = document.getElementById('daily-data');
 
-        function syncInputs(slider, input) {
-            slider.addEventListener('input', () => {
-                input.value = slider.value;
-                calculateLoan();
+        if (statusDataEl && dailyDataEl) {
+            const statusData = JSON.parse(statusDataEl.textContent);
+            const dailyData = JSON.parse(dailyDataEl.textContent);
+
+            // 1. Loan Status Chart (Doughnut)
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.labels,
+                    datasets: [{
+                        data: statusData.data,
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { family: "'Outfit', sans-serif", size: 12 }
+                            }
+                        }
+                    },
+                    layout: { padding: 20 },
+                    cutout: '75%'
+                }
             });
-            input.addEventListener('input', () => {
-                slider.value = input.value;
-                calculateLoan();
+
+            // 2. Daily Trends Chart (Line)
+            const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+            new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: dailyData.labels,
+                    datasets: [{
+                        label: 'New Loans',
+                        data: dailyData.data,
+                        borderColor: '#2563eb',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
+                            gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+                            return gradient;
+                        },
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { family: "'Outfit', sans-serif" },
+                            bodyFont: { family: "'Outfit', sans-serif" },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4], color: '#f1f5f9' },
+                            ticks: { font: { family: "'Outfit', sans-serif", size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: "'Outfit', sans-serif", size: 10 }, maxTicksLimit: 10 }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
             });
-            input.addEventListener('change', () => calculateLoan());
         }
-
-        syncInputs(weightSlider, weightInput);
-        syncInputs(rateSlider, rateInput);
-        syncInputs(tenureSlider, tenureInput);
-
-        function calculateLoan() {
-            const weight = parseFloat(weightInput.value) || 0;
-            // Simple Logic: Rate around 4000 per gram (just an example)
-            // Ideally this comes from backend, but "Frontend Only" requested.
-            const ratePerGram = 4000;
-            const total = weight * ratePerGram;
-
-            // Format currency
-            loanAmountDisplay.innerText = total.toLocaleString('en-IN');
-
-            // Animate scale slightly
-            loanAmountDisplay.style.transform = "scale(1.1)";
-            setTimeout(() => {
-                loanAmountDisplay.style.transform = "scale(1)";
-            }, 200);
-        }
-
-        // Initial calc
-        calculateLoan();
 
         // --- Counter Animation ---
         function animateValue(obj, start, end, duration) {
