@@ -6,6 +6,7 @@ from decimal import Decimal, DecimalException, InvalidOperation
 import os
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
+from django.core.files import File
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime
@@ -734,10 +735,25 @@ def loan_entry_step5(request):
                     
                     # Handle customer photo
                     customer_photo_path = session.get("customer_photo")
-                    if customer_photo_path:
-                        customer_data["photo"] = customer_photo_path
                     
+                    # Create customer first without photo
                     customer = Customer.objects.create(**customer_data)
+                    
+                    if customer_photo_path:
+                        # Construct full path to temp file
+                        # customer_photo_path stored in session is relative to MEDIA_ROOT (e.g. "temp_customers/imgs.jpg")
+                        full_temp_path = os.path.join(settings.MEDIA_ROOT, customer_photo_path)
+                        
+                        if os.path.exists(full_temp_path):
+                            with open(full_temp_path, 'rb') as f:
+                                # Save to model field - this moves it to 'customers/photos/' as per model definition
+                                customer.photo.save(os.path.basename(customer_photo_path), File(f), save=True)
+                            
+                            # Clean up temp file
+                            try:
+                                os.remove(full_temp_path)
+                            except OSError:
+                                pass
 
 
                 # -----------------------
