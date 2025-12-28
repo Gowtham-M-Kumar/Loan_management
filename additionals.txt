@@ -1,37 +1,15 @@
-1. 🕒 Automated Interest Updates (The "Midnight Worker")
-Currently, interest only updates when an admin clicks on a specific loan. If a loan is not viewed for 6 months, the database still shows the old interest amount.
+1. Security & Compliance
+Real OTP Integration: Currently, the system uses a hardcoded 123456 OTP. Integrating a real SMS service (like Twilio, MSG91, or TextLocal) would secure the loan entry and closure processes.
+PII Encryption: Sensitive data like Aadhaar numbers are currently stored in plain text. In a professional system, these should be encrypted at the database level.
+Audit Logging: Implementing django-simple-history to track every change made to a loan or customer profile, ensuring a full paper trail for financial audits.
+2. Financial Logic & Automation
+Automated Interest Daily Tasks: Instead of calculating interest "on-demand" when a page is visited, use Celery + Redis to automatically calculate and update interest for all active loans daily at midnight.
+Support for Multiple Interest Regimes: Refactor the interest logic into a "Strategy Pattern" to easily support different schemes (e.g., monthly compounding, daily simple interest, or grace period variations).
+3. Reporting & Business Intelligence
+Bulk Export Tools: Add a report generator that produces CSV/Excel exports for accountants (e.g., "Monthly Interest Accrual Report" or "Yearly Closed Loans Summary").
+Professional PDF Invoices: Expand the existing receipt logic to generate high-fidelity PDF invoices for minden interest payments using libraries like WeasyPrint.
+4. User Experience (UX) Enhancements
+WhatsApp/SMS Notifications: Automatically send a WhatsApp message to the customer when a payment is recorded or when interest is approaching a capitalization date.
+Advanced Customer Search: Implement a more powerful search (e.g., using PostgreSQL Full-Text Search) with "type-ahead" suggestions as the user enters a mobile number or name.
+Would you like me to start on any of these, or is there another specific area you'd like to focus on?
 
-Recommendation: Create a Django Management Command (e.g., python manage.py apply_daily_interest) that runs automatically every midnight. It will loop through all active loans, calculate the day's interest, and apply any yearly capitalizations scheduled for that day. This ensures your data is always "live" even without manual intervention.
-
-2. 🗓️ Advanced Backdated Payment Logic
-Financial systems often need to record a payment that actually happened yesterday or a few days ago.
-
-Recommendation: Refine the 
-loan_payment_view
- to handle "Effective Dates." If a payment is recorded for 3 days ago, the system should:
-Roll back interest calculation to 3 days ago.
-Apply the payment (Interest first, then Principal).
-Recalculate interest for the remaining 3 days based on the new reduced principal.
-
-3. 🔄 The "Auto-Extension" (Renewal) Workflow
-In gold loan businesses, customers often "Renew" their loan after a year rather than letting it capitalize.
-
-Recommendation: Implement a Loan Renewal function. Instead of just adding interest to the principal (Capitalization), this would:
-Accept a payment for all pending interest.
-"Close" the existing loan.
-Immediately create a "Linked" new loan with the same gold items but a fresh 1-year tenure. This preserves the historical audit trail perfectly.
-
-4. 📊 Audit Logging (Change Tracking)
-Right now, if an admin edits a loan's interest rate or principal amount, the old value is lost forever.
-
-Recommendation: Add a Simple Audit Model. Any time a critical field (Rate, Principal, Status) is changed, the system should save a record of who changed it, old value, new value, and timestamp. This is critical for preventing internal fraud and resolving disputes.
-
-5. 📉 "Due for Capitalization" Reporting
-You now have the logic to capitalize interest every 365 days, but the admin needs to proactively call these customers before it happens.
-
-Recommendation: Add a specialized filter or view for "Upcoming Capitalizations". This would list all loans reaching their 365-day boundary in the next 15–30 days.
-
-6. 🚫 Partial Interest Lock (Grace Period)
-You have a 10-day grace period.
-
-Recommendation: Explicitly handle "Early Closure." If a customer takes a loan today and wants to close it tomorrow, standard practice is to still charge a minimum of 7 or 10 days of interest. Ensure your closure logic enforces this "Minimum Interest" rule.

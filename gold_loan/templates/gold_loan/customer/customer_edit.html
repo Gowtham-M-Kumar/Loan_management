@@ -164,13 +164,13 @@
                 </div>
                 <div class="field-group">
                     <label>Alternate Mobile</label>
-                    <input type="text" name="mobile_secondary" value="{{ customer.mobile_secondary }}">
+                    <input type="text" name="mobile_secondary" value="{{ customer.mobile_secondary }}" maxlength="10">
                 </div>
             </div>
             <div class="field-grid-2">
                 <div class="field-group">
                     <label>Email Address</label>
-                    <input type="email" name="email" value="{{ customer.email }}">
+                    <input type="email" name="email" value="{{ customer.email }}" >
                 </div>
                 <div class="field-group">
                     <label>Profession *</label>
@@ -192,7 +192,7 @@
                 </div>
                 <div class="field-group">
                     <label>Nominee Mobile *</label>
-                    <input type="text" name="nominee_mobile" value="{{ customer.nominee_mobile }}" required>
+                    <input type="text" name="nominee_mobile" value="{{ customer.nominee_mobile }}" required maxlength="10">
                 </div>
             </div>
         </div>
