@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Invoice{% endblock %}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+            line-height: 1.5;
+            font-size: 11pt;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10mm;
+            margin-bottom: 10mm;
+        }
+
+        .company-info {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .company-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 0;
+        }
+
+        .company-details {
+            font-size: 10pt;
+            color: #64748b;
+            margin-top: 2mm;
+        }
+
+        .invoice-meta {
+            display: table-cell;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .invoice-type {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1e293b;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .meta-row {
+            margin-top: 1mm;
+            font-size: 10pt;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .customer-section {
+            display: flex;
+            gap: 15mm;
+            margin-bottom: 15mm;
+        }
+
+        .customer-photo {
+            width: 35mm;
+            height: 45mm;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: top;
+            background: #f8fafc;
+        }
+
+        .customer-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .customer-details {
+            display: inline-block;
+            vertical-align: top;
+            width: 100mm;
+            margin-left: 5mm;
+        }
+
+        .section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 2mm;
+            margin-bottom: 4mm;
+        }
+
+        .field-row {
+            display: flex;
+            margin-bottom: 1.5mm;
+        }
+
+        .field-label {
+            width: 35mm;
+            font-weight: bold;
+            color: #64748b;
+            font-size: 10pt;
+        }
+
+        .field-value {
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10mm;
+        }
+
+        th {
+            background: #f1f5f9;
+            text-align: left;
+            padding: 3mm;
+            font-size: 10pt;
+            text-transform: uppercase;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 3mm;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .total-section {
+            margin-left: auto;
+            width: 80mm;
+            page-break-inside: avoid;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2mm 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .total-row.final {
+            border-top: 2px solid #2563eb;
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 14pt;
+            margin-top: 2mm;
+            color: #2563eb;
+        }
+
+        .item-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2mm;
+            margin-top: 2mm;
+        }
+
+        .item-thumb {
+            width: 20mm;
+            height: 20mm;
+            border: 1px solid #e2e8f0;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        .footer {
+            margin-top: 20mm;
+            padding-top: 5mm;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 9pt;
+            color: #94a3b8;
+        }
+
+        .signature-area {
+            margin-top: 15mm;
+            display: table;
+            width: 100%;
+        }
+
+        .signature-box {
+            display: table-cell;
+            width: 50%;
+            text-align: center;
+        }
+
+        .signature-line {
+            width: 50mm;
+            border-bottom: 1px solid #475569;
+            margin: 0 auto 2mm auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 1mm 3mm;
+            border-radius: 999px;
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-primary {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="company-info">
+            <h1 class="company-name">PUNNAGAI GOLD LOAN</h1>
+            <p class="company-details">
+                Premium Gold Loan Services & Solutions<br>
+                Administered via PG Management System
+            </p>
+        </div>
+        <div class="invoice-meta">
+            <h2 class="invoice-type">{% block invoice_type %}Receipt{% endblock %}</h2>
+            <div class="meta-row">
+                <span class="meta-label">No:</span> {% block invoice_no %}INV-000{% endblock %}
+            </div>
+            <div class="meta-row">
+                <span class="meta-label">Date:</span> {{ now|date:"d M Y" }}
+            </div>
+        </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <div class="signature-area">
+        <div class="signature-box" style="text-align: left;">
+            <div class="signature-line" style="margin-left: 0;"></div>
+            Customer Signature
+        </div>
+        <div class="signature-box" style="text-align: right;">
+            <div class="signature-line" style="margin-right: 0;"></div>
+            Authorized Signatory
+        </div>
+    </div>
+
+    <div class="footer">
+        This is a system-generated document and does not require a physical seal. <br>
+        Generated at {{ now|date:"d M Y, h:i A" }}
+    </div>
+</body>
+
+</html>

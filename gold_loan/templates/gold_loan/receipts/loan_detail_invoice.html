@@ -1,0 +1,126 @@
+{% extends "gold_loan/receipts/invoice_base.html" %}
+
+{% block title %}Loan Receipt - {{ loan.loan_number }}{% endblock %}
+{% block invoice_type %}Loan Receipt{% endblock %}
+{% block invoice_no %}{{ loan.loan_number }}{% endblock %}
+
+{% block content %}
+<div class="customer-section">
+    <div class="customer-photo">
+        {% if customer.photo %}
+        <img src="{{ customer.photo.path }}" alt="Customer Photo">
+        {% else %}
+        <div style="padding: 15mm 0; text-align: center; color: #cbd5e1;">NO PHOTO</div>
+        {% endif %}
+    </div>
+    <div class="customer-details">
+        <div class="section-title">Customer Details</div>
+        <div class="field-row">
+            <span class="field-label">Customer ID:</span>
+            <span class="field-value">{{ customer.customer_id }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Name:</span>
+            <span class="field-value">{{ customer.name }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Mobile:</span>
+            <span class="field-value">{{ customer.mobile_primary }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Aadhaar:</span>
+            <span class="field-value">XXXXXXXX{{ customer.aadhaar_number|slice:"-4:" }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Address:</span>
+            <span class="field-value">{{ customer.address }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="section-title">Loan Details</div>
+<div style="display: table; width: 100%; margin-bottom: 10mm;">
+    <div style="display: table-cell; width: 50%;">
+        <div class="field-row">
+            <span class="field-label">Lot Number:</span>
+            <span class="field-value">{{ loan.lot_number }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Interest Rate:</span>
+            <span class="field-value">{{ loan.interest_rate }}%</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Price/Gram:</span>
+            <span class="field-value">₹{{ loan.price_per_gram }}</span>
+        </div>
+    </div>
+    <div style="display: table-cell; width: 50%;">
+        <div class="field-row">
+            <span class="field-label">Approved Grams:</span>
+            <span class="field-value">{{ loan.approved_grams }}g</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Status:</span>
+            <span class="badge badge-primary">{{ loan.get_status_display }}</span>
+        </div>
+        <div class="field-row">
+            <span class="field-label">Total Amount:</span>
+            <span class="field-value" style="color: #2563eb; font-size: 14pt;">₹{{ loan.total_amount }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="section-title">Pledged Gold Items</div>
+<table>
+    <thead>
+        <tr>
+            <th>Item Name</th>
+            <th>Carat</th>
+            <th>Gross Wt</th>
+            <th>Net Wt</th>
+            <th>Pieces</th>
+            <th>Gallery</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>
+                <strong>{{ item.item_name }}</strong><br>
+                <span style="font-size: 9pt; color: #64748b;">{{ item.description|default:"" }}</span>
+            </td>
+            <td>{{ item.get_carat_display }}</td>
+            <td>{{ item.gross_weight }}g</td>
+            <td>{{ item.approved_net_weight }}g</td>
+            <td>{{ item.bundle.item_count|default:"1" }}</td>
+            <td>
+                <div class="item-gallery">
+                    {% for img in item.images.all %}
+                    <img src="{{ img.image.path }}" class="item-thumb" alt="Item">
+                    {% endfor %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if documents %}
+<div class="section-title">Verified Documents</div>
+<div style="font-size: 10pt; color: #475569; margin-bottom: 5mm;">
+    The following identity and ownership documents were verified:
+    <ul style="margin-top: 2mm;">
+        {% for doc in documents %}
+        <li>{{ doc.get_document_type_display }} ({{ doc.other_name|default:"Primary" }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="total-section">
+    <div class="total-row final">
+        <span>Principal Amount:</span>
+        <span>₹{{ loan.total_amount }}</span>
+    </div>
+</div>
+{% endblock %}
