@@ -67,6 +67,7 @@ class CustomerAdmin(admin.ModelAdmin):
         "customer_id",
         "name",
         "mobile_primary",
+        "email",
         "aadhaar_number",
         "profession",
         "nominee_name",
@@ -76,10 +77,12 @@ class CustomerAdmin(admin.ModelAdmin):
         "customer_id",
         "name",
         "mobile_primary",
+        "mobile_secondary",
+        "email",
         "aadhaar_number",
     )
 
-    list_filter = ("profession",)
+    list_filter = ("profession", "created_at") if hasattr(Customer, 'created_at') else ("profession",)
 
     ordering = ("-id",)
 
@@ -95,10 +98,11 @@ class LoanAdmin(admin.ModelAdmin):
         "lot_number",
         "customer",
         "total_amount",
+        "interest_rate",
+        "approved_grams",
         "pending_interest",
         "status",
         "loan_start_date",
-        "last_capitalization_date",
         "created_at",
     )
 
@@ -188,6 +192,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "principal_component",
         "payment_date",
         "payment_mode",
+        "reference_no",
     )
     
     list_filter = ("payment_date", "payment_mode")
