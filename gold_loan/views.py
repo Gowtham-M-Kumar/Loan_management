@@ -387,7 +387,12 @@ def loan_entry_step1(request):
         photo_path = None
         
         if photo:
-            fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, "temp_customers"))
+            # Ensure temp directory exists
+            temp_loc = os.path.join(settings.MEDIA_ROOT, "temp_customers")
+            if not os.path.exists(temp_loc):
+                os.makedirs(temp_loc, exist_ok=True)
+                
+            fs = FileSystemStorage(location=temp_loc)
             filename = fs.save(photo.name, photo)
             photo_path = f"temp_customers/{filename}"
 
@@ -741,7 +746,6 @@ def loan_entry_step5(request):
                     
                     if customer_photo_path:
                         # Construct full path to temp file
-                        # customer_photo_path stored in session is relative to MEDIA_ROOT (e.g. "temp_customers/imgs.jpg")
                         full_temp_path = os.path.join(settings.MEDIA_ROOT, customer_photo_path)
                         
                         if os.path.exists(full_temp_path):
@@ -1663,9 +1667,12 @@ def customer_create(request):
                 aadhaar_number=aadhaar_number,
                 profession=profession,
                 nominee_name=nominee_name,
-                nominee_mobile=nominee_mobile,
-                photo=photo
+                nominee_mobile=nominee_mobile
             )
+            
+            if photo:
+                customer.photo = photo
+                customer.save()
             
             messages.success(request, f"Customer '{customer.name}' created successfully!")
             return redirect("gold_loan:customer_detail", customer_id=customer.id)
@@ -1718,8 +1725,8 @@ def customer_edit(request, customer_id):
                 raise ValueError("All mandatory fields (*) must be filled.")
 
             # Handle photo upload
-            photo = request.FILES.get("photo")
-            if photo:
+            if "photo" in request.FILES:
+                photo = request.FILES["photo"]
                 customer.photo = photo
 
             customer.save()

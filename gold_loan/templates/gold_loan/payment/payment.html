@@ -368,6 +368,7 @@
     submitPayment.addEventListener('click', () => {
         submitPayment.disabled = true;
         submitPayment.innerText = 'Processing...';
+        localStorage.setItem('toast_trigger', 'payment_success');
         paymentForm.submit();
     });
 

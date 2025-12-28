@@ -65,6 +65,7 @@ application.{% endblock %}
     // Cleanup sessionStorage upon successful form submission
     document.getElementById('stepForm').addEventListener('submit', function () {
         sessionStorage.removeItem("customer_photo_preview");
+        localStorage.setItem('toast_trigger', 'loan_success');
     });
 </script>
 {% endblock %}

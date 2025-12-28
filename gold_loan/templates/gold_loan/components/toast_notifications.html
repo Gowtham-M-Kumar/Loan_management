@@ -1,0 +1,252 @@
+{% load static %}
+
+<style>
+    /* ===============================
+       TOAST CONTAINER
+    =============================== */
+    #toast-container {
+        position: fixed;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+    }
+
+    /* Desktop: Top Right */
+    @media (min-width: 768px) {
+        #toast-container {
+            top: 24px;
+            right: 24px;
+            align-items: flex-end;
+        }
+    }
+
+    /* Mobile: Bottom Center */
+    @media (max-width: 767px) {
+        #toast-container {
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+        }
+    }
+
+    /* ===============================
+       TOAST CARD
+    =============================== */
+    .toast-item {
+        pointer-events: auto;
+        background: var(--bg-card, #ffffff);
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+        padding: 16px 20px;
+        min-width: 300px;
+        max-width: 380px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        animation: toast-slide-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    @keyframes toast-slide-in {
+        from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes toast-slide-out {
+        to {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.95);
+        }
+    }
+
+    /* ===============================
+       CONTENT
+    =============================== */
+    .toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: 700;
+        font-size: 15px;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+
+    .toast-desc {
+        font-weight: 500;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 50%;
+        color: #94a3b8;
+        transition: all 0.2s;
+    }
+
+    .toast-close:hover {
+        color: #0f172a;
+        background: rgba(0,0,0,0.05);
+    }
+
+    /* ===============================
+       VARIANTS
+    =============================== */
+    .toast-success .toast-icon {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+    .toast-primary .toast-icon {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .toast-error .toast-icon {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+</style>
+
+<!-- TOAST HOLDER -->
+<div id="toast-container"></div>
+
+<!-- AUDIO -->
+<audio id="sound-loan-success" preload="auto">
+    <source src="{% static 'gold_loan/sounds/loan_add.mp3' %}" type="audio/mpeg">
+</audio>
+
+<audio id="sound-payment-success" preload="auto">
+    <source src="{% static 'gold_loan/sounds/payment.mp3' %}" type="audio/mpeg">
+</audio>
+
+<script>
+(function () {
+    const container = document.getElementById('toast-container');
+    const soundLoan = document.getElementById('sound-loan-success');
+    const soundPayment = document.getElementById('sound-payment-success');
+
+    /* ===============================
+       SAFE AUDIO PLAY
+    =============================== */
+    function playSound(audioEl) {
+        try {
+            document.querySelectorAll('audio').forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+            });
+            audioEl.volume = 0.5;
+            audioEl.play().catch(() => {});
+        } catch (e) {}
+    }
+
+    /* ===============================
+       TOAST CREATOR
+    =============================== */
+    function showToast(title, message, type = 'success', sound = null) {
+        if (container.children.length >= 3) {
+            container.removeChild(container.firstChild);
+        }
+
+        const el = document.createElement('div');
+        el.className = `toast-item toast-${type}`;
+        el.setAttribute('role', 'alert');
+        el.setAttribute('aria-live', 'assertive');
+
+        let icon = '';
+        if (type === 'success') {
+            icon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14 9 11"/></svg>`;
+        } else if (type === 'primary') {
+            icon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
+        } else {
+            icon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+        }
+
+        el.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-desc">${message}</div>
+            </div>
+            <button class="toast-close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(el);
+
+        el.querySelector('.toast-close').onclick = () => {
+            el.style.animation = 'toast-slide-out 0.3s forwards';
+            el.addEventListener('animationend', () => el.remove());
+        };
+
+        if (sound) playSound(sound);
+
+        setTimeout(() => {
+            if (el.parentElement) {
+                el.style.animation = 'toast-slide-out 0.4s forwards';
+                el.addEventListener('animationend', () => el.remove());
+            }
+        }, 4000);
+    }
+
+    /* ===============================
+       TRIGGERS
+    =============================== */
+    const hasError = document.querySelector('.alert-error, .errorlist') !== null;
+    const trigger = localStorage.getItem('toast_trigger');
+
+    if (trigger && !hasError) {
+        if (trigger === 'loan_success') {
+            showToast('Loan Created', 'New loan has been successfully added.', 'primary', soundLoan);
+        }
+        if (trigger === 'payment_success') {
+            showToast('Payment Recorded', 'Payment has been logged successfully.', 'success', soundPayment);
+        }
+    }
+    localStorage.removeItem('toast_trigger');
+
+    /* ===============================
+       DJANGO MESSAGES
+    =============================== */
+    document.querySelectorAll('.messages .alert').forEach(msg => {
+        let type = 'primary';
+        if (msg.classList.contains('alert-success')) type = 'success';
+        if (msg.classList.contains('alert-error')) type = 'error';
+
+        showToast(type === 'error' ? 'Error' : 'Success', msg.innerText.trim(), type);
+        msg.style.display = 'none';
+    });
+})();
+</script>
