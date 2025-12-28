@@ -85,7 +85,7 @@
 
     <!-- Gold Summary -->
     <div class="section">
-        <div class="section-header">Gold Details</div>
+        <div class="section-header">Gold Details & Images</div>
         <table class="receipt-table">
             <thead>
                 <tr>
@@ -95,7 +95,6 @@
                     <th>Gross Wt (g)</th>
                     <th>Net Wt (g)</th>
                     <th>Pieces</th>
-                    <th>Description</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,8 +106,21 @@
                     <td>{{ item.gross_weight }}</td>
                     <td>{{ item.approved_net_weight }}</td>
                     <td>{{ item.bundle.item_count|default:"1" }}</td>
-                    <td>{{ item.description }}</td>
                 </tr>
+                {% if item.images.all %}
+                <tr>
+                    <td colspan="6" style="padding: 10px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            {% for img in item.images.all %}
+                            <div style="border: 1px solid #eee; padding: 4px; border-radius: 4px;">
+                                <img src="{{ img.image.url }}"
+                                    style="height: 80px; width: 80px; object-fit: cover; border-radius: 2px;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
                 {% endfor %}
                 <tr style="background: #f9f9f9; font-weight: bold;">
                     <td colspan="4" style="text-align: right;">Total Net Weight:</td>
@@ -118,6 +130,34 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Documents Section -->
+    {% if loan.documents.all %}
+    <div class="section">
+        <div class="section-header">Submitted Documents</div>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 10px;">
+            {% for doc in loan.documents.all %}
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #fafafa;">
+                <div
+                    style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">
+                    {{ doc.get_document_type_display }}
+                    {% if doc.other_name %} ({{ doc.other_name }}){% endif %}
+                </div>
+                {% if doc.image %}
+                <img src="{{ doc.image.url }}"
+                    style="width: 100%; height: 120px; object-fit: contain; border-radius: 4px; background: white; border: 1px solid #eee;">
+                {% else %}
+                <div
+                    style="height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8; font-size: 12px; border-radius: 4px;">
+                    No Image Attached
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="receipt-footer">
         <div style="font-size: 12px; color: #666;">

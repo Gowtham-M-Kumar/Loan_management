@@ -14,7 +14,6 @@ from datetime import timedelta
 from django.db.models import Sum, Count
 import csv
 from .models import Customer, Loan, GoldItem, GoldItemImage, GoldItemBundle, LoanDocument, Payment, LoanExpense, LoanPledge, LoanPledgeAdjustment
-from .utils import render_to_pdf_response
 
 
 def get_loan_session(request):
@@ -1474,7 +1473,7 @@ def loan_payment_view(request, loan_id):
 
 def loan_receipt(request, loan_id):
     loan = get_object_or_404(
-        Loan.objects.select_related("customer").prefetch_related("items"),
+        Loan.objects.select_related("customer").prefetch_related("items__images", "items__bundle", "documents"),
         id=loan_id
     )
     
@@ -1487,17 +1486,12 @@ def loan_receipt(request, loan_id):
         "loan": loan,
         "customer": loan.customer,
         "items": loan.items.all(),
-        "documents": loan.documents.all(),
         "total_items": total_items,
         "total_pieces": total_pieces,
         "total_weight": total_weight,
         "now": timezone.now()
     }
-    return render_to_pdf_response(
-        "gold_loan/receipts/loan_detail_invoice.html", 
-        context, 
-        filename=f"Loan_Receipt_{loan.loan_number}.pdf"
-    )
+    return render(request, "gold_loan/loan/loan_receipt.html", context)
 
 
 def payment_summary_receipt(request, loan_id):
@@ -1527,33 +1521,19 @@ def payment_summary_receipt(request, loan_id):
         "total_amount_paid": total_amount_paid,
         "now": timezone.now()
     }
-    # For now, using detail invoice as summary? Or should I create a specialized summary?
-    # Requirement: "Expand the existing receipt logic to generate high-fidelity PDF invoices"
-    # I'll create a summary one if needed, but let's stick to these for now.
-    return render_to_pdf_response(
-        "gold_loan/receipts/loan_detail_invoice.html", 
-        context, 
-        filename=f"Loan_Summary_{loan.loan_number}.pdf"
-    )
+    return render(request, "gold_loan/payment/payment_summary_receipt.html", context)
 
 
 def payment_receipt(request, payment_id):
     payment = get_object_or_404(Payment.objects.select_related("loan", "loan__customer"), id=payment_id)
     
-    outstanding_principal = _calculate_outstanding_principal(payment.loan)
-    
     context = {
         "payment": payment,
         "loan": payment.loan,
         "customer": payment.loan.customer,
-        "outstanding_principal": outstanding_principal,
         "now": timezone.now()
     }
-    return render_to_pdf_response(
-        "gold_loan/receipts/payment_invoice.html", 
-        context, 
-        filename=f"Payment_Receipt_{payment.id}.pdf"
-    )
+    return render(request, "gold_loan/payment/payment_receipt.html", context)
 
 
 def loan_closure_receipt(request, loan_id):
