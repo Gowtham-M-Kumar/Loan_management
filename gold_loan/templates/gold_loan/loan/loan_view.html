@@ -49,6 +49,13 @@
             </a>
             {% endif %}
             {% endif %}
+
+            {% if pledge %}
+            <button type="button" onclick="togglePledgeSection()" class="btn btn-secondary"
+                style="border-color: #6366f1; color: #6366f1; background: #f5f3ff;">
+                View Internal Pledge
+            </button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -141,7 +148,7 @@
                 </div>
                 <div class="info-item">
                     <div class="info-label">Price Per Gram</div>
-                    <div class="info-value">₹{{ loan.price_per_gram }}</div>
+                    <div class="info-value">₹{{ loan.price_per_gram|floatformat:2 }}</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Approved Grams</div>
@@ -149,7 +156,7 @@
                 </div>
                 <div class="info-item">
                     <div class="info-label">Cur. Loan Amount (After Cap.)</div>
-                    <div class="info-value-large">₹{{ loan.total_amount }}</div>
+                    <div class="info-value-large">₹{{ loan.total_amount|floatformat:2 }}</div>
                 </div>
                 <!-- Added Outstanding Principal -->
                 <div class="info-item">
@@ -159,18 +166,11 @@
                 <!-- Added Pending Interest -->
                 <div class="info-item">
                     <div class="info-label" style="color: #d97706;">Pending Interest (Till Today)</div>
-                    <div class="info-value-warn">₹{{ loan.pending_interest }}</div>
+                    <div class="info-value-warn">₹{{ loan.pending_interest|floatformat:2 }}</div>
                 </div>
-                <!-- Added Next Capitalization Date -->
                 <div class="info-item">
-                    <div class="info-label">Next Interest Capitalization On</div>
-                    <div class="info-value">
-                        {% if next_cap_date %}
-                        {{ next_cap_date|date:"d M Y" }}
-                        {% else %}
-                        —
-                        {% endif %}
-                    </div>
+                    <div class="info-label">Lot Number</div>
+                    <div class="info-value" style="font-weight: 700; color: #1e40af;">{{ loan.lot_number }}</div>
                 </div>
             </div>
         </div>
@@ -225,6 +225,102 @@
             </div>
         </div>
     </div>
+
+    <!-- Section 3.6: Internal Pledge Details (Conditional) -->
+    {% if pledge %}
+    <div id="pledge-details-section" class="section-card"
+        style="display: none; border: 2px solid #6366f1; background: #fcfaff;">
+        <div class="section-header" style="background: #f5f3ff; border-bottom: 1px solid #e0e7ff;">
+            <h4 class="section-title" style="color: #4f46e5;">Internal Pledge Details (Company Record)</h4>
+            <span
+                style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px;">PRIVATE</span>
+        </div>
+        <div class="section-body">
+            <div class="info-grid" style="margin-bottom: 24px;">
+                <div class="info-item">
+                    <div class="info-label" style="color: #6366f1;">Bank Name</div>
+                    <div class="info-value">{{ pledge.bank_name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label" style="color: #6366f1;">Pledge Receipt No</div>
+                    <div class="info-value" style="font-weight: 700;">{{ pledge.pledge_receipt_no }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label" style="color: #6366f1;">Pledge Date</div>
+                    <div class="info-value">{{ pledge.created_at|date:"d M Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label" style="color: #6366f1;">Interest Period</div>
+                    <div class="info-value">{{ pledge.interest_period|default:"-" }}</div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <div class="info-label" style="color: #6366f1;">Bank Address</div>
+                    <div class="info-value">{{ pledge.bank_address }}</div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <div class="info-label" style="color: #6366f1;">Internal Notes</div>
+                    <div class="info-value" style="font-style: italic;">{{ pledge.notes|default:"No notes entered." }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-grid"
+                style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e0e7ff; margin-bottom: 24px;">
+                <div class="info-item">
+                    <div class="info-label">Actual Grams</div>
+                    <div class="info-value">{{ pledge.total_actual_grams }}g</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Approved Grams</div>
+                    <div class="info-value">{{ pledge.total_approved_grams|default:"0" }}g</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pledge Rate (₹/g)</div>
+                    <div class="info-value">₹{{ pledge.price_per_gram|floatformat:2 }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pledge Interest Rate</div>
+                    <div class="info-value">{{ pledge.interest_rate|floatformat:2 }}%</div>
+                </div>
+            </div>
+
+            {% if adjustments %}
+            <div class="data-card" style="border-color: #e0e7ff; margin-bottom: 0;">
+                <div class="data-header" style="background: #fcfaff;">
+                    <h4 style="color: #6366f1;">Internal Adjustments / Expenses</h4>
+                </div>
+                <table class="finance-table">
+                    <thead>
+                        <tr style="background: #f5f3ff;">
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Medium</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adj in adjustments %}
+                        <tr>
+                            <td>{{ adj.date|date:"d M Y" }}</td>
+                            <td class="amount-cell" style="color: #4338ca;">₹{{ adj.amount|floatformat:2 }}</td>
+                            <td>{{ adj.medium }}</td>
+                            <td style="font-size: 12px; color: #64748b;">{{ adj.notes|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f5f3ff; font-weight: 700;">
+                            <td colspan="1" style="text-align: right;">Total Internal Expense:</td>
+                            <td style="color: #4338ca;">₹{{ total_adjustment_amount|floatformat:2 }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Section 4: Gold Items -->
     <div class="data-card">
@@ -334,26 +430,29 @@
         </div>
 
         <div class="footer-actions">
-            <!-- Always Visible Actions -->
+            {% if pledge %}
+            <button type="button" onclick="togglePledgeSection()" class="btn-footer"
+                style="background: #f5f3ff; color: #4f46e5; border: 1px solid #e0e7ff; cursor: pointer;">
+                View Internal Pledge
+            </button>
+            {% endif %}
+
+            {% if loan.status == 'active' %}
             <a href="{% url 'gold_loan:loan_payment_view' loan.id %}" class="btn-footer btn-f-primary">
                 Add Payment
             </a>
-
             <a href="{% url 'gold_loan:loan_edit' loan.id %}" class="btn-footer btn-f-secondary">
                 Edit Pledge
             </a>
-
-            <!-- Conditional Actions -->
-            {% if loan.status == 'active' %}
             <a href="{% url 'gold_loan:loan_close_action' loan.id %}" class="btn-footer btn-f-danger">
                 Close Loan
             </a>
-            {% endif %}
-
-            {% if loan.status == 'closed' and not has_been_extended %}
+            {% elif loan.status == 'closed' %}
+            {% if not has_been_extended %}
             <a href="{% url 'gold_loan:loan_extend_otp' loan.id %}" class="btn-footer btn-f-warning">
                 Extend Loan
             </a>
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -397,6 +496,16 @@
         } finally {
             btn.disabled = false;
             btn.innerText = "Simulate";
+        }
+    }
+
+    function togglePledgeSection() {
+        const section = document.getElementById('pledge-details-section');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            section.style.display = 'none';
         }
     }
 </script>

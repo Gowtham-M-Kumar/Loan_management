@@ -39,6 +39,7 @@ urlpatterns = [
     # API Endpoints
     path("api/search-customers/", views.search_customers, name="search_customers"),
     path("api/get-customer/<int:customer_id>/", views.get_customer, name="get_customer"),
+    path("api/check-lot-vacancy/", views.check_lot_vacancy, name="check_lot_vacancy"),
 
     # Loan View (Read-Only)
     path("loan/<int:loan_id>/view/", views.loan_view, name="loan_view"),

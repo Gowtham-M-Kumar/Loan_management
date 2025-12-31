@@ -100,5 +100,25 @@
 
     // Initial calculation
     window.onload = calculateLoan;
+
+    // Lot Number Vacancy Check
+    const lotInput = document.querySelector("[name='lot_number']");
+    lotInput.addEventListener("change", async function () {
+        const lot = this.value.trim();
+        if (!lot) return;
+
+        try {
+            const response = await fetch(`{% url "gold_loan:check_lot_vacancy" %}?lot_number=${encodeURIComponent(lot)}`);
+            const data = await response.json();
+
+            if (!data.vacant) {
+                alert("This lot number is not vacant, enter any other.");
+                this.value = ""; // Clear the input
+                this.focus();
+            }
+        } catch (err) {
+            console.error("Lot check failed:", err);
+        }
+    });
 </script>
 {% endblock %}

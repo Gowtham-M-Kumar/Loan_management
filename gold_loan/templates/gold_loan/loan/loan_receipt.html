@@ -70,15 +70,15 @@
             </div>
             <div class="receipt-row">
                 <span class="receipt-label">Interest Rate:</span>
-                <span class="receipt-value">{{ loan.interest_rate }}%</span>
+                <span class="receipt-value">{{ loan.interest_rate|floatformat:2 }}%</span>
             </div>
             <div class="receipt-row">
                 <span class="receipt-label">Price/Gram:</span>
-                <span class="receipt-value">₹{{ loan.price_per_gram }}</span>
+                <span class="receipt-value">₹{{ loan.price_per_gram|floatformat:2 }}</span>
             </div>
             <div class="receipt-row" style="margin-top: 10px;">
                 <span class="receipt-label" style="color: #000; font-size: 16px;">Total Amount:</span>
-                <span class="receipt-value" style="font-size: 16px;">₹{{ loan.total_amount }}</span>
+                <span class="receipt-value" style="font-size: 16px;">₹{{ loan.total_amount|floatformat:2 }}</span>
             </div>
         </div>
     </div>

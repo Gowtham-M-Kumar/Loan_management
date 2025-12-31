@@ -589,7 +589,7 @@ def loan_entry_step3(request):
 
         # Validate Lot Occupancy
         lot_number = request.POST.get("lot_number", "").strip()
-        occupied = Loan.objects.filter(lot_number=lot_number, status=Loan.STATUS_ACTIVE).exists()
+        occupied = Loan.objects.filter(lot_number=lot_number).exclude(status=Loan.STATUS_CLOSED).exists()
         
         if occupied:
             # Recalculate context for error
@@ -600,7 +600,7 @@ def loan_entry_step3(request):
                 except: pass
             
             return render(request, "gold_loan/loan/step3_loan.html", {
-                "error": f"Lot Number '{lot_number}' is currently occupied by another active loan.",
+                "error": f"Lot Number '{lot_number}' is already in use by another active loan record.",
                 "total_approved_grams": total_approved_grams_for_context,
                 "loan_data": request.POST
             })
@@ -901,6 +901,17 @@ def search_customers(request):
     return JsonResponse({'customers': results})
 
 
+def check_lot_vacancy(request):
+    """Check if a lot number is available for use"""
+    lot_number = request.GET.get('lot_number', '').strip()
+    if not lot_number:
+        return JsonResponse({'vacant': True})
+    
+    # Lot is occupied if used by ANY loan that is NOT closed
+    is_used = Loan.objects.filter(lot_number=lot_number).exclude(status=Loan.STATUS_CLOSED).exists()
+    return JsonResponse({'vacant': not is_used})
+
+
 def get_customer(request, customer_id):
     """Get full customer details by ID"""
     try:
@@ -1023,6 +1034,7 @@ def loan_view(request, loan_id):
     
     # Recalculate context after update
     outstanding_principal = _calculate_outstanding_principal(loan)
+    total_principal_paid = loan.payments.aggregate(total=Sum('principal_component'))['total'] or Decimal('0')
     total_paid = loan.payments.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
 
     # Calculate Next Capitalization Date
@@ -1049,6 +1061,7 @@ def loan_view(request, loan_id):
         "items": loan.items.all(),
         "documents": loan.documents.all(),
         "outstanding_principal": outstanding_principal,
+        "total_principal_paid": total_principal_paid,
         "total_paid": total_paid,
         "payments": loan.payments.all().order_by("-created_at"),
         "next_cap_date": next_cap_date,
@@ -1378,6 +1391,7 @@ def loan_payment_view(request, loan_id):
     
     # 2. Calculate dynamic values
     outstanding_principal = _calculate_outstanding_principal(loan)
+    total_principal_paid = loan.payments.aggregate(total=Sum('principal_component'))['total'] or Decimal('0')
     total_paid = loan.payments.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
     error = None
@@ -1458,6 +1472,7 @@ def loan_payment_view(request, loan_id):
     context = {
         "loan": loan,
         "outstanding_principal": outstanding_principal,
+        "total_principal_paid": total_principal_paid,
         "total_paid": total_paid,
         "total_due": outstanding_principal + loan.pending_interest,
         "payments": loan.payments.all().order_by("-created_at"),
