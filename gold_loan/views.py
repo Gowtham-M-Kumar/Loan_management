@@ -60,9 +60,18 @@ def home(request):
         'data': [item['count'] for item in daily_trends]
     }
 
+    # 3. Top 10 Customers (by loan count)
+    from django.db.models import Count
+    top_customers = Customer.objects.annotate(loan_count=Count('loans')).order_by('-loan_count')[:10]
+    
+    # 4. Top 10 Highest Active Loans (by volume)
+    top_active_loans = Loan.objects.filter(status=Loan.STATUS_ACTIVE).order_by('-total_amount')[:10]
+
     context = {
         'status_chart_data': status_chart_data,
         'daily_chart_data': daily_chart_data,
+        'top_customers': top_customers,
+        'top_active_loans': top_active_loans,
     }
     
     return render(request, "gold_loan/home.html", context)
@@ -1552,7 +1561,10 @@ def payment_receipt(request, payment_id):
 
 
 def loan_closure_receipt(request, loan_id):
-    loan = get_object_or_404(Loan, id=loan_id)
+    loan = get_object_or_404(
+        Loan.objects.select_related("customer").prefetch_related("items__images", "items__bundle", "documents"),
+        id=loan_id
+    )
     
     if loan.status != Loan.STATUS_CLOSED:
         # Should not exist for open loans
@@ -1562,9 +1574,16 @@ def loan_closure_receipt(request, loan_id):
     payments = loan.payments.all()
     total_paid_amount = payments.aggregate(sum=Sum('total_amount'))['sum'] or Decimal('0')
     
+    # Calculate item totals for receipt
+    total_weight = loan.items.aggregate(total=Sum('approved_net_weight'))['total'] or 0
+    total_pieces = sum(item.bundle.item_count for item in loan.items.all() if hasattr(item, 'bundle'))
+    
     context = {
         "loan": loan,
         "customer": loan.customer,
+        "items": loan.items.all(),
+        "total_weight": total_weight,
+        "total_pieces": total_pieces,
         "total_paid_amount": total_paid_amount,
         "now": timezone.now()
     }

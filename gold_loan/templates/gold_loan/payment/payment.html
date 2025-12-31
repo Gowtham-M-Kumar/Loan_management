@@ -255,7 +255,12 @@
 
                 <div class="footer-fields" style="flex: 1; display: flex; gap: 16px; align-items: flex-end;">
                     <div class="f-input-group" style="flex: 1;">
-                        <label>Amount (₹)</label>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px;">
+                            <label style="margin-bottom: 0;">Amount (₹)</label>
+                            <button type="button" id="amountToCloseBtn" class="btn-amount-to-close"
+                                data-amount="{{ total_due|floatformat:2 }}">Amount to Close</button>
+                        </div>
                         <input type="number" name="amount" id="amountInput" class="f-control"
                             style="font-weight: 700; color: var(--primary);" min="1" step="0.01" placeholder="0.00"
                             required>
@@ -379,6 +384,31 @@
             paymentModal.style.display = 'none';
         }
     });
+
+    // Amount to Close functionality
+    const amountToCloseBtn = document.getElementById('amountToCloseBtn');
+    if (amountToCloseBtn) {
+        amountToCloseBtn.addEventListener('click', function () {
+            const fullAmount = this.getAttribute('data-amount');
+            if (amountInput) {
+                // If current value is already the full amount, clear it (toggle behavior)
+                if (amountInput.value === fullAmount) {
+                    amountInput.value = '';
+                    amountInput.style.backgroundColor = '#fef2f2'; // Reddish tint for clear
+                    setTimeout(() => {
+                        amountInput.style.backgroundColor = '#f8fafc';
+                    }, 500);
+                } else {
+                    amountInput.value = fullAmount;
+                    // Highlight the field briefly (Greenish for fill)
+                    amountInput.style.backgroundColor = '#ecfdf5';
+                    setTimeout(() => {
+                        amountInput.style.backgroundColor = '#f8fafc';
+                    }, 500);
+                }
+            }
+        });
+    }
 
     async function runSimulation() {
         const daysInput = document.getElementById('simulate-days');

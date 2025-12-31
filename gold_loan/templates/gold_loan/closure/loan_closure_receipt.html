@@ -54,9 +54,100 @@
         This loan is fully settled and closed.
     </div>
 
-    <div style="font-size: 13px; color: #666; text-align: center;">
+    <div style="font-size: 13px; color: #666; text-align: center; margin-bottom: 30px;">
         All pledged items associated with this loan have been returned to the customer.
     </div>
+
+    <!-- Gold Summary -->
+    <div class="section">
+        <div class="section-header">Gold Details & Images</div>
+        <table class="receipt-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Item Name</th>
+                    <th>Carat</th>
+                    <th>Gross Wt (g)</th>
+                    <th>Net Wt (g)</th>
+                    <th>Pieces</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.item_name }}</td>
+                    <td>{{ item.get_carat_display }}</td>
+                    <td>{{ item.gross_weight }}</td>
+                    <td>{{ item.approved_net_weight }}</td>
+                    <td>{{ item.bundle.item_count|default:"1" }}</td>
+                </tr>
+                {% if item.images.all %}
+                <tr>
+                    <td colspan="6" style="padding: 10px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            {% for img in item.images.all %}
+                            <div style="border: 1px solid #eee; padding: 4px; border-radius: 4px;">
+                                <img src="{{ img.image.url }}"
+                                    style="height: 80px; width: 80px; object-fit: cover; border-radius: 2px;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                <tr style="background: #f9f9f9; font-weight: bold;">
+                    <td colspan="4" style="text-align: right;">Total Net Weight:</td>
+                    <td>{{ total_weight }}g</td>
+                    <td>{{ total_pieces }} Pieces</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Documents Section -->
+    {% if loan.documents.all %}
+    <div class="section">
+        <div class="section-header">Submitted Documents</div>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 10px;">
+            {% for doc in loan.documents.all %}
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #fafafa;">
+                <div
+                    style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">
+                    {{ doc.get_document_type_display }}
+                    {% if doc.other_name %} ({{ doc.other_name }}){% endif %}
+                </div>
+                {% if doc.image %}
+                {% if ".pdf" in doc.image.url|lower %}
+                <div
+                    style="height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff1f2; color: #e11d48; border-radius: 4px; border: 1px solid #fecdd3;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span style="font-size: 10px; font-weight: 800; margin-top: 5px;">PDF DOCUMENT</span>
+                </div>
+                {% else %}
+                <img src="{{ doc.image.url }}"
+                    style="width: 100%; height: 120px; object-fit: contain; border-radius: 4px; background: white; border: 1px solid #eee;">
+                {% endif %}
+                {% else %}
+                <div
+                    style="height: 120px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #94a3b8; font-size: 12px; border-radius: 4px;">
+                    No Image Attached
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="receipt-footer">
         <div style="font-size: 12px; color: #666;">

@@ -25,6 +25,10 @@
                     <option value="">Document Type *</option>
                     <option value="aadhaar" {% if doc.document_type == 'aadhaar' %}selected{% endif %}>Aadhaar</option>
                     <option value="pan" {% if doc.document_type == 'pan' %}selected{% endif %}>PAN</option>
+                    <option value="driving_license" {% if doc.document_type == 'driving_license' %}selected{% endif %}>
+                        Driving License</option>
+                    <option value="voter_id" {% if doc.document_type == 'voter_id' %}selected{% endif %}>Voter ID</option>
+                    <option value="passport" {% if doc.document_type == 'passport' %}selected{% endif %}>Passport</option>
                     <option value="photo" {% if doc.document_type == 'photo' %}selected{% endif %}>Photo</option>
                     <option value="other" {% if doc.document_type == 'other' %}selected{% endif %}>Other</option>
                 </select>
@@ -92,6 +96,9 @@
                         <option value="">Document Type *</option>
                         <option value="aadhaar">Aadhaar</option>
                         <option value="pan">PAN</option>
+                        <option value="driving_license">Driving License</option>
+                        <option value="voter_id">Voter ID</option>
+                        <option value="passport">Passport</option>
                         <option value="photo">Photo</option>
                         <option value="other">Other</option>
                     </select>

@@ -258,6 +258,78 @@
                 </div>
             </div>
 
+            <!-- Leaderboard Section -->
+            <div class="leaderboard-grid animate-on-scroll delay-2" style="margin-top: 60px;">
+                <!-- Top Customers -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Top 10 Customers</h3>
+                        <p>By total number of loans</p>
+                    </div>
+                    <div class="card-body scrollable-card-body">
+                        <ul class="leader-list">
+                            {% for customer in top_customers %}
+                            <li class="leader-item">
+                                <a href="{% url 'gold_loan:customer_detail' customer.id %}" class="leader-link">
+                                    <div class="leader-info">
+                                        <div class="avatar-circle">
+                                            {% if customer.photo %}
+                                            <img src="{{ customer.photo.url }}" alt="{{ customer.name }}"
+                                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                            {% else %}
+                                            {{ customer.name|slice:":1" }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="leader-details">
+                                            <span class="leader-name">{{ customer.name }}</span>
+                                            <span class="leader-sub">ID: {{ customer.customer_id }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="leader-metric">
+                                        <span class="metric-val">{{ customer.loan_count }}</span>
+                                        <span class="metric-label">Loans</span>
+                                    </div>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="leader-empty">No customers found</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Highest Active Loans -->
+                <div class="analytics-card">
+                    <div class="card-header">
+                        <h3>Highest Active Loans</h3>
+                        <p>Top 10 by loan amount</p>
+                    </div>
+                    <div class="card-body scrollable-card-body">
+                        <ul class="leader-list">
+                            {% for loan in top_active_loans %}
+                            <li class="leader-item">
+                                <a href="{% url 'gold_loan:loan_view' loan.id %}" class="leader-link">
+                                    <div class="leader-info">
+                                        <div class="avatar-circle gold">₹</div>
+                                        <div class="leader-details">
+                                            <span class="leader-name">{{ loan.loan_number }}</span>
+                                            <span class="leader-sub">{{ loan.customer.name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="leader-metric">
+                                        <span class="metric-val">₹{{ loan.total_amount|floatformat:0 }}</span>
+                                        <span class="metric-label">Principal</span>
+                                    </div>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="leader-empty">No active loans found</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <div style="text-align: center; margin-top: 40px;">
                 <a href="{% url 'gold_loan:analytics_dashboard' %}" class="btn btn-secondary btn-lg">
                     View Full Analytics Report
@@ -292,57 +364,84 @@
         </div>
     </section>
 
-    <!-- SECTION 5: FOOTER (Bajaj Style) -->
+    <!-- SECTION 5: FOOTER (Enhanced Punnagai Style) -->
     <footer class="app-footer">
         <div class="container">
             <div class="footer-top">
                 <div class="footer-col">
-                    <h4 class="accordion-header">About Punnagai <span class="chevron">›</span></h4>
+                    <h4 class="accordion-header">Quick Access <span class="chevron">›</span></h4>
                     <ul class="footer-links">
-                        <li><a href="#">Our Story</a></li>
-                        <li><a href="#">Leadership</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="{% url 'gold_loan:dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'gold_loan:loan_entry' %}">New Loan Entry</a></li>
+                        <li><a href="{% url 'gold_loan:analytics_dashboard' %}">Analytics & Reports</a></li>
+                        <li><a href="{% url 'gold_loan:customer_list' %}">Customer Directory</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4 class="accordion-header">Products <span class="chevron">›</span></h4>
+                    <h4 class="accordion-header">Our Services <span class="chevron">›</span></h4>
                     <ul class="footer-links">
-                        <li><a href="#">Gold Loan</a></li>
-                        <li><a href="#">SME Loan</a></li>
-                        <li><a href="#">Investments</a></li>
+                        <li><a href="#about">Gold Valuation</a></li>
+                        <li><a href="{% url 'gold_loan:extended_loans_list' %}">Loan Extensions</a></li>
+                        <li><a href="{% url 'gold_loan:closed_loans_list' %}">Loan Closures</a></li>
+                        <li><a href="#analytics">Interest Tracking</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
-                    <h4 class="accordion-header">Calculators <span class="chevron">›</span></h4>
+                    <h4 class="accordion-header">Company <span class="chevron">›</span></h4>
                     <ul class="footer-links">
-                        <li><a href="#">Gold Loan Calculator</a></li>
-                        <li><a href="#">EMI Calculator</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4 class="accordion-header">Legal <span class="chevron">›</span></h4>
-                    <ul class="footer-links">
+                        <li><a href="#about">About Punnagai</a></li>
+                        <li><a href="#">Fair Practice Code</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                         <li><a href="#">Terms of Use</a></li>
-                        <li><a href="#">Fair Practice Code</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="accordion-header">Support <span class="chevron">›</span></h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Security Features</a></li>
+                        <li><a href="#">Download Mobile App</a></li>
                     </ul>
                 </div>
                 <div class="footer-col contact-col">
                     <h4>Reach Us</h4>
-                    <p>1800-123-4567</p>
-                    <p>support@punnagai.com</p>
-                    <div class="social-icons">
-                        <!-- Icons using basic shapes or SVGs if needed, keeping simple text for now or simple circles -->
-                        <div class="soc-icon">fb</div>
-                        <div class="soc-icon">in</div>
-                        <div class="soc-icon">yt</div>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span class="icon">📞</span>
+                            <div class="details">
+                                <small>Call Support</small>
+                                <strong>+91 90000 00000</strong>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="icon">📧</span>
+                            <div class="details">
+                                <small>Email Us</small>
+                                <strong>support@punnagai.in</strong>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <span class="icon">📍</span>
+                            <div class="details">
+                                <small>Visit Office</small>
+                                <strong>Main Road, Tamil Nadu</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Punnagai Gold Loan. All Rights Reserved.</p>
-                <p class="small-text">CIN: U65990TN2025PTC000000</p>
+                <div class="footer-bottom-left">
+                    <p>&copy; 2025 Punnagai Gold Loan Management System. All Rights Reserved.</p>
+                </div>
+                <div class="footer-bottom-right">
+                    <div class="social-icons">
+                        <a href="#" class="soc-icon" title="LinkedIn">in</a>
+                        <a href="#" class="soc-icon" title="Twitter">tw</a>
+                        <a href="#" class="soc-icon" title="Facebook">fb</a>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>

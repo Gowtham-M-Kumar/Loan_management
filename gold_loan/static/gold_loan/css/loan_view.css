@@ -860,3 +860,45 @@
         /* More space for stacked buttons */
     }
 }
+
+/* Document Icon Previews */
+.doc-icon-preview {
+    height: 32px;
+    width: 32px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 800;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.doc-icon-preview span {
+    margin-top: -2px;
+}
+
+.pdf-icon {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.word-icon {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+.receipt-icon {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #10b981;
+}
+
+.doc-icon-preview:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -213,4 +213,27 @@
     }
 }
 
+
+
+
+/* Amount to Close Button */
+.btn-amount-to-close {
+    background: #f1f5f9;
+    border: 1px solid #c2c9d1;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.btn-amount-to-close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #94a3b8;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }

@@ -262,6 +262,9 @@ class LoanDocument(models.Model):
     DOCUMENT_AADHAAR = "aadhaar"
     DOCUMENT_PAN = "pan"
     DOCUMENT_PHOTO = "photo"
+    DOCUMENT_DL = "driving_license"
+    DOCUMENT_VOTER = "voter_id"
+    DOCUMENT_PASSPORT = "passport"
     DOCUMENT_CLOSURE = "closure_receipt"
     DOCUMENT_OTHER = "other"
 
@@ -269,6 +272,9 @@ class LoanDocument(models.Model):
         (DOCUMENT_AADHAAR, "Aadhaar"),
         (DOCUMENT_PAN, "PAN"),
         (DOCUMENT_PHOTO, "Photo"),
+        (DOCUMENT_DL, "Driving License"),
+        (DOCUMENT_VOTER, "Voter ID"),
+        (DOCUMENT_PASSPORT, "Passport"),
         (DOCUMENT_CLOSURE, "Closure Receipt"),
         (DOCUMENT_OTHER, "Other"),
     ]
@@ -289,7 +295,7 @@ class LoanDocument(models.Model):
         blank=True
     )
 
-    image = models.ImageField(upload_to="loan_documents/", blank=True)
+    image = models.FileField(upload_to="loan_documents/", blank=True)
 
     def __str__(self):
         return f"{self.document_type} document for {self.loan.loan_number}"
