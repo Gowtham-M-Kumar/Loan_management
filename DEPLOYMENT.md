@@ -163,7 +163,12 @@ Railway offers automatic deployment from GitHub with zero configuration.
    - Click "New" → "Database" → "PostgreSQL"
    - Railway automatically sets `DATABASE_URL`
 
-5. **Generate Domain**
+5. **Run Initial Migration**
+   - After first deployment, open the project terminal
+   - Run: `python manage.py migrate`
+   - Run: `python manage.py createsuperuser`
+
+6. **Generate Domain**
    - Go to Settings → Networking
    - Click "Generate Domain"
 

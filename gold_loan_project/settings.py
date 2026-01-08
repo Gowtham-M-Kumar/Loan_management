@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -81,8 +82,6 @@ WSGI_APPLICATION = 'gold_loan_project.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Support for DATABASE_URL environment variable (used by Heroku, Railway, Render)
-import dj_database_url
-
 database_url = os.getenv('DATABASE_URL')
 if database_url:
     DATABASES = {
@@ -134,7 +133,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise configuration for static files (Django 4.2+)
+# WhiteNoise configuration for static files (requires Django 4.2+, used in Django 6.0)
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
