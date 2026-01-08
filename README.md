@@ -95,6 +95,28 @@ A robust and secure Django-based platform designed for managing the entire lifec
    python manage.py runserver
    ```
 
+## 🚀 Deployment
+
+This project is ready to deploy on various platforms directly from GitHub!
+
+### Quick Deploy Options:
+- **Heroku**: One-click deployment with Procfile included
+- **Railway**: Automatic deployment with railway.json
+- **Render**: Free hosting with render.yaml configuration
+- **PythonAnywhere**: Step-by-step manual deployment
+
+📖 **[Read the complete deployment guide →](DEPLOYMENT.md)**
+
+The deployment guide covers:
+- Environment variable configuration
+- Platform-specific setup instructions
+- Database configuration (PostgreSQL support)
+- Post-deployment steps
+- Troubleshooting tips
+
+### GitHub Actions CI/CD
+This repository includes automated testing and security checks that run on every push via GitHub Actions.
+
 ## 📂 Project Structure
 
 - `gold_loan/`: The core application containing models, views for the 5-step entry, interest logic, and templates.

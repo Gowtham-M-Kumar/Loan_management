@@ -12,6 +12,7 @@ venv/
 # Django
 db.sqlite3
 media/
+staticfiles/
 
 # VS Code
 .vscode/
@@ -19,4 +20,7 @@ media/
 # OS
 .DS_Store
 
+# Deployment
+*.log
+bandit-report.json
 
