@@ -99,7 +99,13 @@ A robust and secure Django-based platform designed for managing the entire lifec
 
 This project is ready to deploy on various platforms directly from GitHub!
 
-### Quick Deploy Options:
+### Quick Deploy Buttons:
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Gowtham-M-Kumar/Loan_management)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Gowtham-M-Kumar/Loan_management)
+
+### Supported Platforms:
 - **Heroku**: One-click deployment with Procfile included
 - **Railway**: Automatic deployment with railway.json
 - **Render**: Free hosting with render.yaml configuration

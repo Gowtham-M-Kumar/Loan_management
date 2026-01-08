@@ -2,6 +2,34 @@
 
 This guide covers deploying the Gold Loan Management System to various cloud platforms directly from GitHub.
 
+## 🚀 Quick Start
+
+### One-Click Deployments
+
+The fastest way to deploy this project is using one-click deployment buttons:
+
+**Railway** (Recommended for beginners)
+1. Click the "Deploy on Railway" button in the README
+2. Sign in with GitHub
+3. Configure environment variables
+4. Deploy automatically
+
+**Render** (Free tier available)
+1. Click the "Deploy to Render" button in the README
+2. Sign in with GitHub
+3. Configure environment variables
+4. Deploy with zero configuration
+
+### What Gets Deployed?
+
+When you deploy from GitHub, the platform automatically:
+- ✅ Installs all Python dependencies from `requirements.txt`
+- ✅ Sets up the Django application with Gunicorn
+- ✅ Configures static file serving with WhiteNoise
+- ✅ Runs database migrations
+- ✅ Collects static files
+- ✅ Provides a public URL for your application
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
