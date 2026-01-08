@@ -1,4 +1,4 @@
-# Punnagai Gold Loan Management System
+Loan Management System
 
 A robust and secure Django-based platform designed for managing the entire lifecycle of gold loans. This system streamlines customer onboarding, gold item appraisal, interest tracking, and payment processing with a focus on accuracy and financial security.
 
