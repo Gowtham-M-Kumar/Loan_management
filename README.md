@@ -2,6 +2,18 @@ Loan Management System
 
 A robust and secure Django-based platform designed for managing the entire lifecycle of gold loans. This system streamlines customer onboarding, gold item appraisal, interest tracking, and payment processing with a focus on accuracy and financial security.
 
+---
+
+## 🚀 **Quick Deploy** 
+
+**Ready to deploy?** Click one of these buttons to deploy to a cloud platform:
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/Gowtham-M-Kumar/Loan_management) [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Gowtham-M-Kumar/Loan_management)
+
+📘 **New to deployment?** Follow the [Step-by-Step Railway Guide](RAILWAY_DEPLOY.md) for detailed instructions.
+
+---
+
 ## 🚀 Key Features
 
 ### 1. Customer Management & KYC
