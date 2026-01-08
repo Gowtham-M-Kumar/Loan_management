@@ -2,6 +2,9 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 
+# Import OTP models
+from .otp_models import OTPRecord
+
 
 # =========================
 # VALIDATORS

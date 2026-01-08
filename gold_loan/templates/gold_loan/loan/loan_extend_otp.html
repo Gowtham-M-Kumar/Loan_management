@@ -15,9 +15,15 @@
     </div>
 
     <div style="margin: 20px 0; color: #4b5563;">
-        An OTP has been sent to the customer's mobile to authorize this extension.
-        <br>
-        <strong>(Mock OTP: 123456)</strong>
+        <p style="color: #666; margin-bottom: 20px;">
+            An OTP has been sent to the Admin to authorize this extension.
+            <br>
+            Please enter it below to verify.
+            {% if mobile_masked %}
+            <br>
+            <small>Sent to: {{ mobile_masked }}</small>
+            {% endif %}
+        </p>
     </div>
 
     {% if error %}
@@ -34,11 +40,58 @@
                 style="padding: 10px; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; letter-spacing: 2px; text-align: center;">
         </div>
 
-        <button type="submit" class="btn-primary"
+        <button type="submit" class="btn-primary" id="verifyBtn"
             style="width: 100%; padding: 12px; font-size: 16px; background-color: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">
             Verify & Start Extension
         </button>
     </form>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            const btn = document.getElementById('verifyBtn');
+            const formData = new FormData(form);
+
+            btn.disabled = true;
+            btn.innerText = 'Verifying...';
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        const errorDiv = document.querySelector('.warning-box') || document.createElement('div');
+                        if (!document.querySelector('.warning-box')) {
+                            errorDiv.className = 'warning-box';
+                            errorDiv.style.marginBottom = '20px';
+                            errorDiv.style.backgroundColor = '#fef2f2';
+                            errorDiv.style.border = '1px solid #fee2e2';
+                            errorDiv.style.color = '#991b1b';
+                            errorDiv.style.padding = '10px';
+                            errorDiv.style.borderRadius = '6px';
+                            form.parentElement.insertBefore(errorDiv, form);
+                        }
+                        errorDiv.innerText = data.error || 'Invalid OTP';
+                        errorDiv.style.display = 'block';
+                        btn.disabled = false;
+                        btn.innerText = 'Verify & Start Extension';
+                    }
+                })
+                .catch(err => {
+                    alert('Error verifying OTP');
+                    btn.disabled = false;
+                    btn.innerText = 'Verify & Start Extension';
+                });
+        });
+    </script>
 
     <div style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
         <a href="{% url 'gold_loan:loan_view' loan.id %}" class="btn-cancel"

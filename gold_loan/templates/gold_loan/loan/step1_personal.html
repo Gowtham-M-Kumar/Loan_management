@@ -43,13 +43,15 @@
         <div class="grid-2">
             <input type="text" name="name" value="{{ existing_data.name|default:'' }}" placeholder="Customer Name *"
                 required>
-            <input type="text" name="mobile_primary" value="{{ existing_data.mobile_primary|default:'' }}"
-                placeholder="Mobile Number *" required pattern="[0-9]{10}" maxlength="10">
+            <input type="tel" name="mobile_primary" value="{{ existing_data.mobile_primary|default:'' }}"
+                placeholder="Mobile Number *" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
         </div>
 
         <div class="grid-2">
-            <input type="text" name="mobile_secondary" value="{{ existing_data.mobile_secondary|default:'' }}"
-                placeholder="Alternate Mobile" pattern="[0-9]{10}" maxlength="10">
+            <input type="tel" name="mobile_secondary" value="{{ existing_data.mobile_secondary|default:'' }}"
+                placeholder="Alternate Mobile" pattern="[0-9]{10}" maxlength="10" inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
             <input type="email" name="email" value="{{ existing_data.email|default:'' }}" placeholder="Email">
         </div>
 
@@ -57,7 +59,8 @@
 
         <div class="grid-2">
             <input type="text" name="aadhaar_number" value="{{ existing_data.aadhaar_number|default:'' }}"
-                placeholder="Aadhaar Number *" required pattern="[0-9]{12}" maxlength="12">
+                placeholder="Aadhaar Number *" required pattern="[0-9]{12}" maxlength="12" inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
             <input type="text" name="profession" value="{{ existing_data.profession|default:'' }}"
                 placeholder="Profession *" required>
         </div>
@@ -65,8 +68,9 @@
         <div class="grid-2">
             <input type="text" name="nominee_name" value="{{ existing_data.nominee_name|default:'' }}"
                 placeholder="Nominee Name *" required>
-            <input type="text" name="nominee_mobile" value="{{ existing_data.nominee_mobile|default:'' }}"
-                placeholder="Nominee Mobile *" required pattern="[0-9]{10}" maxlength="10">
+            <input type="tel" name="nominee_mobile" value="{{ existing_data.nominee_mobile|default:'' }}"
+                placeholder="Nominee Mobile *" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
         </div>
 
         <div class="file-box">

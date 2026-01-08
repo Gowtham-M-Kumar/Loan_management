@@ -1,0 +1,80 @@
+🔔 PRIORITY: Sending OTP to Admin first: 9074616341
+Twilio library not installed. Install: pip install twilio
+❌ Admin OTP failed: SMS service library not available
+❌ Failed to send OTP to Admin
+❌ Failed to send OTP to Admin
+📱 Sending OTP to Customer: 9074616341
+Twilio library not installed. Install: pip install twilio
+📱 Sending OTP to Customer: 9074616341
+Using Twilio Verify Service (VA622a0dbd5ba6d93275e21eec343b0c1e) for +919074616341
+Twilio Verify Error: Unable to create record: The phone number is unverified. Trial accounts cannot send messages to unverified numbers; verify it at twilio.com/user/account/phone-numbers/verified (Code: 21608)
+🔔 PRIORITY: Sending OTP to Admin first: 9698984666
+Using Twilio Verify Service (VA622a0dbd5ba6d93275e21eec343b0c1e) for +919698984666
+Twilio Verify Error: Unable to create record: Custom code not allowed (Code: 60204)
+❌ Admin OTP failed: Twilio Error: Unable to create record: Custom code not allowed
+📱 Sending OTP to Customer: 9074616341
+Using Twilio Verify Service (VA622a0dbd5ba6d93275e21eec343b0c1e) for +919074616341
+Twilio Verify Error: Unable to create record: The phone number is unverified. Trial accounts cannot send messages to unverified numbers; verify it at twilio.com/user/account/phone-numbers/verified (Code: 21608)
+DEBUG MODE: Mock OTP '123456' allowed for +919074616341
+DEBUG MODE: Mock OTP '123456' allowed for +919074616341
+Twilio Error sending OTP to +919074616341: 
+[31m[49mHTTP Error[0m [37m[49mYour request was:[0m
+
+[36m[49mPOST /Services/VA622a0dbd5ba6d93275e21eec343b0c1e/Verifications[0m
+
+[37m[49mTwilio returned the following information:[0m
+
+[34m[49mUnable to create record: The phone number is unverified. Trial accounts cannot send messages to unverified numbers; verify it at twilio.com/user/account/phone-numbers/verified[0m
+
+[37m[49mMore information may be available here:[0m
+
+[34m[49mhttps://www.twilio.com/docs/errors/21608[0m
+
+
+Twilio Error sending OTP to +919074616341: 
+[31m[49mHTTP Error[0m [37m[49mYour request was:[0m
+
+[36m[49mPOST /Services/VA622a0dbd5ba6d93275e21eec343b0c1e/Verifications[0m
+
+[37m[49mTwilio returned the following information:[0m
+
+[34m[49mUnable to create record: The phone number is unverified. Trial accounts cannot send messages to unverified numbers; verify it at twilio.com/user/account/phone-numbers/verified[0m
+
+[37m[49mMore information may be available here:[0m
+
+[34m[49mhttps://www.twilio.com/docs/errors/21608[0m
+
+
+Twilio Error sending OTP to +919074616341: 
+[31m[49mHTTP Error[0m [37m[49mYour request was:[0m
+
+[36m[49mPOST /Services/VA622a0dbd5ba6d93275e21eec343b0c1e/Verifications[0m
+
+[37m[49mTwilio returned the following information:[0m
+
+[34m[49mUnable to create record: The phone number is unverified. Trial accounts cannot send messages to unverified numbers; verify it at twilio.com/user/account/phone-numbers/verified[0m
+
+[37m[49mMore information may be available here:[0m
+
+[34m[49mhttps://www.twilio.com/docs/errors/21608[0m
+
+
+Twilio Verify sent to +919698984666: pending
+Twilio Verify sent to +919698984666: pending (SID: VE7d21eb5d8931d74bbd54131c7485995e)
+Twilio Verify sent to +919698984666: pending (SID: VE7d21eb5d8931d74bbd54131c7485995e)
+Twilio Verify sent to +918848993973: pending (SID: VE8933ae05b3d4a9da49d5de74753cfc6b)
+Twilio Verify Success for +918848993973
+Twilio Verify Error for +918848993973: 
+[31m[49mHTTP Error[0m [37m[49mYour request was:[0m
+
+[36m[49mPOST /Services/VA622a0dbd5ba6d93275e21eec343b0c1e/VerificationCheck[0m
+
+[37m[49mTwilio returned the following information:[0m
+
+[34m[49mUnable to create record: The requested resource /v2/Services/VA622a0dbd5ba6d93275e21eec343b0c1e/VerificationCheck was not found[0m
+
+[37m[49mMore information may be available here:[0m
+
+[34m[49mhttps://www.twilio.com/docs/errors/20404[0m
+
+

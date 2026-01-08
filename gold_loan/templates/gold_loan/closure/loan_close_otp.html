@@ -15,9 +15,15 @@
     </div>
 
     <div style="margin: 20px 0; color: #4b5563;">
-        An OTP has been sent to the customer's mobile and admin.
-        <br>
-        <strong>(Mock OTP: 123456)</strong>
+        <p style="color: #666; margin-bottom: 20px;">
+            An OTP has been sent to the Admin mobile number.
+            <br>
+            Please enter it below to verify and proceed.
+            {% if mobile_masked %}
+            <br>
+            <small>Sent to: {{ mobile_masked }}</small>
+            {% endif %}
+        </p>
     </div>
 
     {% if error %}
@@ -34,8 +40,50 @@
                 style="padding: 10px; width: 100%; border: 1px solid #d1d5db; border-radius: 6px; font-size: 16px; letter-spacing: 2px; text-align: center;">
         </div>
 
-        <button type="submit" class="btn-close">Verify & Proceed</button>
+        <button type="submit" class="btn-close" id="verifyBtn">Verify & Proceed</button>
     </form>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = this;
+            const btn = document.getElementById('verifyBtn');
+            const formData = new FormData(form);
+
+            btn.disabled = true;
+            btn.innerText = 'Verifying...';
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        const errorDiv = document.querySelector('.warning-box') || document.createElement('div');
+                        if (!document.querySelector('.warning-box')) {
+                            errorDiv.className = 'warning-box';
+                            errorDiv.style.marginBottom = '20px';
+                            form.parentElement.insertBefore(errorDiv, form);
+                        }
+                        errorDiv.innerText = data.error || 'Invalid OTP';
+                        errorDiv.style.display = 'block';
+                        btn.disabled = false;
+                        btn.innerText = 'Verify & Proceed';
+                    }
+                })
+                .catch(err => {
+                    alert('Error verifying OTP');
+                    btn.disabled = false;
+                    btn.innerText = 'Verify & Proceed';
+                });
+        });
+    </script>
 
 
     <div style="margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">

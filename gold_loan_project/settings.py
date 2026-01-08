@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -127,3 +131,57 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+# =========================
+# OTP CONFIGURATION
+# =========================
+
+# OTP Provider: 'TWILIO' or 'CONSOLE' (for development)
+OTP_SMS_PROVIDER = 'TWILIO'
+
+# OTP Validity
+OTP_VALIDITY_MINUTES = 10  # OTP expires after 10 minutes
+OTP_MAX_ATTEMPTS = 3  # Maximum verification attempts
+OTP_ADMIN_MOBILE = os.getenv('OTP_ADMIN_MOBILE', '8848993973')  # Admin number for all OTPs
+
+
+# --- TWILIO Configuration ---
+# Sign up at: https://www.twilio.com/
+# Credentials loaded from .env file
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')  # Optional if using Verify Service
+TWILIO_VERIFY_SERVICE_SID = os.getenv('TWILIO_VERIFY_SERVICE_SID')
+
+# --- Email Configuration (Fallback) ---
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Development
+# For production, use SMTP:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+DEFAULT_FROM_EMAIL = 'Punnagai Gold Loan <noreply@punnagaigoldloan.com>'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'otp.log',
+        },
+    },
+    'loggers': {
+        'gold_loan.otp_service': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+    },
+}

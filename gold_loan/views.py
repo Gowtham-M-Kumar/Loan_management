@@ -14,6 +14,8 @@ from datetime import timedelta
 from django.db.models import Sum, Count
 import csv
 from .models import Customer, Loan, GoldItem, GoldItemImage, GoldItemBundle, LoanDocument, Payment, LoanExpense, LoanPledge, LoanPledgeAdjustment
+from .otp_models import OTPRecord
+from .otp_service import OTPService
 
 
 def get_loan_session(request):
@@ -187,27 +189,75 @@ def loan_close_otp(request, loan_id):
     """
     loan = get_object_or_404(Loan, id=loan_id)
     next_action = request.GET.get("action", "close")
+    customer = loan.customer
     
     if request.method == "POST":
-        otp = request.POST.get("otp")
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        otp_input = request.POST.get("otp")
         next_action = request.POST.get("next_action", "close") # Preserve from form
 
-        if otp == "123456": # Mock OTP
+        success, message = OTPService.verify_customer_otp(customer.mobile_primary, otp_input)
+        
+        if success:
+             # Mark log as verified
+             otp_record = OTPRecord.get_latest_valid_otp(
+                mobile_number=customer.mobile_primary,
+                purpose=OTPRecord.OTP_PURPOSE_LOAN_CLOSURE
+             )
+             if otp_record:
+                 otp_record.is_verified = True
+                 otp_record.verified_at = timezone.now()
+                 otp_record.save()
+
+        if success:
             # Set session flag
             request.session['loan_closure_verified_id'] = loan.id
             request.session['loan_closure_next_action'] = next_action
+            if is_ajax: return JsonResponse({'success': True, 'redirect_url': reverse("gold_loan:loan_close_upload", args=[loan.id])})
             return redirect("gold_loan:loan_close_upload", loan_id=loan.id)
         else:
+            if is_ajax: return JsonResponse({'success': False, 'error': message})
             return render(request, "gold_loan/closure/loan_close_otp.html", {
                 "loan": loan,
-                "error": "Invalid OTP. Please try again.",
+                "error": message,
                 "next_action": next_action
             })
             
     # GET: Send/Generate OTP
+    # Check if a valid OTP was sent recently (debounce)
+    existing_otp = OTPRecord.get_latest_valid_otp(
+        mobile_number=customer.mobile_primary,
+        purpose=OTPRecord.OTP_PURPOSE_LOAN_CLOSURE
+    )
+    
+    otp_code = None
+    if existing_otp:
+        # If generated less than 60 seconds ago, don't resend
+        if (timezone.now() - existing_otp.created_at).total_seconds() < 60:
+            pass # Wait
+        else:
+            # Expire old one and create new (log only)
+            OTPRecord.create_otp(
+                mobile_number=customer.mobile_primary,
+                purpose=OTPRecord.OTP_PURPOSE_LOAN_CLOSURE,
+                reference_id=str(loan.id),
+                email=customer.email
+            )
+            OTPService.send_otp_to_customer(customer.mobile_primary)
+    else:
+        # Create new OTP Log
+        OTPRecord.create_otp(
+            mobile_number=customer.mobile_primary,
+            purpose=OTPRecord.OTP_PURPOSE_LOAN_CLOSURE,
+            reference_id=str(loan.id),
+            email=customer.email
+        )
+        OTPService.send_otp_to_customer(customer.mobile_primary)
+
     return render(request, "gold_loan/closure/loan_close_otp.html", {
         "loan": loan,
-        "next_action": next_action
+        "next_action": next_action,
+        "mobile_masked": f"xxxxxx{customer.mobile_primary[-4:]}"
     })
 
 
@@ -296,18 +346,66 @@ def loan_extend_otp(request, loan_id):
         messages.error(request, "This loan has already been extended once. Multiple extensions are not allowed.")
         return redirect("gold_loan:loan_view", loan_id=loan.id)
 
+    customer = loan.customer
+
     if request.method == "POST":
-        otp = request.POST.get("otp")
-        if otp == "123456": # Mock OTP
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        otp_input = request.POST.get("otp")
+
+        success, message = OTPService.verify_customer_otp(customer.mobile_primary, otp_input)
+        
+        if success:
+             # Mark log as verified
+             otp_record = OTPRecord.get_latest_valid_otp(
+                mobile_number=customer.mobile_primary,
+                purpose=OTPRecord.OTP_PURPOSE_LOAN_EXTENSION
+             )
+             if otp_record:
+                 otp_record.is_verified = True
+                 otp_record.verified_at = timezone.now()
+                 otp_record.save()
+
+        if success:
+             if is_ajax: return JsonResponse({'success': True, 'redirect_url': reverse("gold_loan:loan_extend_action", args=[loan.id])})
              return redirect("gold_loan:loan_extend_action", loan_id=loan.id)
         else:
+             if is_ajax: return JsonResponse({'success': False, 'error': message})
              return render(request, "gold_loan/loan/loan_extend_otp.html", {
                 "loan": loan,
-                "error": "Invalid OTP. Please try again."
+                "error": message
              })
              
     # GET: Send/Generate OTP
-    return render(request, "gold_loan/loan/loan_extend_otp.html", {"loan": loan})
+    # Check debouncing
+    existing_otp = OTPRecord.get_latest_valid_otp(
+        mobile_number=customer.mobile_primary,
+        purpose=OTPRecord.OTP_PURPOSE_LOAN_EXTENSION
+    )
+    
+    if existing_otp:
+        if (timezone.now() - existing_otp.created_at).total_seconds() >= 60:
+             # Resend if > 60s
+            OTPRecord.create_otp(
+                mobile_number=customer.mobile_primary,
+                purpose=OTPRecord.OTP_PURPOSE_LOAN_EXTENSION,
+                reference_id=str(loan.id),
+                email=customer.email
+            )
+            OTPService.send_otp_to_customer(customer.mobile_primary)
+    else:
+        # Create new
+        OTPRecord.create_otp(
+            mobile_number=customer.mobile_primary,
+            purpose=OTPRecord.OTP_PURPOSE_LOAN_EXTENSION,
+            reference_id=str(loan.id),
+            email=customer.email
+        )
+        OTPService.send_otp_to_customer(customer.mobile_primary)
+    
+    return render(request, "gold_loan/loan/loan_extend_otp.html", {
+        "loan": loan,
+        "mobile_masked": f"xxxxxx{customer.mobile_primary[-4:]}"
+    })
 
 
 def loan_extend_action(request, loan_id):
@@ -376,6 +474,17 @@ def loan_entry_step1(request):
         if len(aadhaar_number) != 12 or not aadhaar_number.isdigit():
             return render(request, "gold_loan/loan/step1_personal.html", {
                 "error": "Aadhaar number must be exactly 12 digits"
+            })
+
+        # Check for existing customer conflicts
+        if Customer.objects.filter(mobile_primary=mobile_primary).exists():
+            return render(request, "gold_loan/loan/step1_personal.html", {
+                "error": f"A customer with mobile {mobile_primary} already exists. Please search and select that customer instead."
+            })
+            
+        if Customer.objects.filter(aadhaar_number=aadhaar_number).exists():
+            return render(request, "gold_loan/loan/step1_personal.html", {
+                "error": f"A customer with Aadhaar {aadhaar_number} already exists. Please search and select that customer instead."
             })
 
         # NEW CUSTOMER
@@ -725,12 +834,51 @@ def loan_entry_step5(request):
     if not session:
         return redirect("gold_loan:loan_entry_step1")
 
-    if request.method == "POST":
-        otp = request.POST.get("otp")
+    # Resolve Customer Info for OTP
+    existing_customer_id = session.get("existing_customer_id")
+    mobile_number = None
+    email = None
+    customer_name = "Customer"
+    
+    if existing_customer_id:
+        try:
+             c = Customer.objects.get(id=existing_customer_id)
+             mobile_number = c.mobile_primary
+             email = c.email
+             customer_name = c.name
+        except Customer.DoesNotExist:
+             return redirect("gold_loan:loan_entry_step1")
+    elif "customer" in session:
+        mobile_number = session["customer"].get("mobile_primary")
+        email = session["customer"].get("email")
+        customer_name = session["customer"].get("name", "New Customer")
+    
+    if not mobile_number:
+         messages.error(request, "Mobile number missing from session.")
+         return redirect("gold_loan:loan_entry_step1")
 
-        if otp != "123456":
+    if request.method == "POST":
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        otp_input = request.POST.get("otp")
+
+        success, message = OTPService.verify_customer_otp(mobile_number, otp_input)
+        
+        if success:
+             # Mark log as verified
+             otp_record = OTPRecord.get_latest_valid_otp(
+                mobile_number=mobile_number,
+                purpose=OTPRecord.OTP_PURPOSE_LOAN_CREATION
+             )
+             if otp_record:
+                 otp_record.is_verified = True
+                 otp_record.verified_at = timezone.now()
+                 otp_record.save()
+        
+        if not success:
+            if is_ajax: return JsonResponse({'success': False, 'error': message})
             return render(request, "gold_loan/loan/step5_otp.html", {
-                "error": "Invalid OTP"
+                "error": message,
+                "mobile_masked": f"xxxxxx{mobile_number[-4:]}"
             })
 
         try:
@@ -744,29 +892,38 @@ def loan_entry_step5(request):
                     # Use existing customer
                     customer = Customer.objects.get(id=existing_customer_id)
                 else:
-                    # Create new customer
+                    # Create or GET existing customer by mobile
                     customer_data = session["customer"].copy()
+                    mobile = customer_data.get("mobile_primary")
                     
-                    # Handle customer photo
-                    customer_photo_path = session.get("customer_photo")
+                    # Try to find existing first to avoid IntegrityError
+                    customer = Customer.objects.filter(mobile_primary=mobile).first()
                     
-                    # Create customer first without photo
-                    customer = Customer.objects.create(**customer_data)
-                    
-                    if customer_photo_path:
-                        # Construct full path to temp file
-                        full_temp_path = os.path.join(settings.MEDIA_ROOT, customer_photo_path)
+                    if not customer:
+                        # Handle customer photo
+                        customer_photo_path = session.get("customer_photo")
                         
-                        if os.path.exists(full_temp_path):
-                            with open(full_temp_path, 'rb') as f:
-                                # Save to model field - this moves it to 'customers/photos/' as per model definition
-                                customer.photo.save(os.path.basename(customer_photo_path), File(f), save=True)
+                        # Create customer first without photo
+                        customer = Customer.objects.create(**customer_data)
+                        
+                        if customer_photo_path:
+                            # Construct full path to temp file
+                            full_temp_path = os.path.join(settings.MEDIA_ROOT, customer_photo_path)
                             
-                            # Clean up temp file
-                            try:
-                                os.remove(full_temp_path)
-                            except OSError:
-                                pass
+                            if os.path.exists(full_temp_path):
+                                with open(full_temp_path, 'rb') as f:
+                                    # Save to model field - this moves it to 'customers/photos/' as per model definition
+                                    customer.photo.save(os.path.basename(customer_photo_path), File(f), save=True)
+                                
+                                # Clean up temp file
+                                try:
+                                    os.remove(full_temp_path)
+                                except OSError:
+                                    pass
+                    else:
+                        # Customer exists, update their details if necessary? 
+                        # For now, just use the existing record to allow the loan to proceed.
+                        logger.info(f"Linking loan to existing customer found by mobile: {mobile}")
 
 
                 # -----------------------
@@ -846,30 +1003,132 @@ def loan_entry_step5(request):
 
             # Clear session after successful save
             del request.session["loan_entry"]
+            if is_ajax: return JsonResponse({'success': True, 'redirect_url': reverse("gold_loan:dashboard")})
             return redirect("gold_loan:dashboard")
 
         except Exception as e:
             # Handle errors (e.g., duplicate mobile/Aadhaar)
             error_message = str(e)
             if "mobile_primary" in error_message:
-                error_message = "Mobile number already exists"
+                error_message = f"Mobile number '{session.get('customer', {}).get('mobile_primary')}' already belongs to an existing customer. Please go back to Step 1 and select the existing customer."
             elif "aadhaar_number" in error_message:
-                error_message = "Aadhaar number already exists"
+                error_message = f"Aadhaar number '{session.get('customer', {}).get('aadhaar_number')}' is already registered. Please go back to Step 1 and select the existing customer."
             else:
                 error_message = f"Error saving loan: {error_message}"
             
+            if is_ajax: return JsonResponse({'success': False, 'error': error_message})
             return render(request, "gold_loan/loan/step5_otp.html", {
-                "error": error_message
+                "error": error_message,
+                "mobile_masked": f"xxxxxx{mobile_number[-4:]}"
             })
+    
+    # GET: Send OTP
+    existing_otp = OTPRecord.get_latest_valid_otp(
+        mobile_number=mobile_number,
+        purpose=OTPRecord.OTP_PURPOSE_LOAN_CREATION
+    )
+    
+    if existing_otp and (timezone.now() - existing_otp.created_at).total_seconds() < 60:
+         pass # Wait for debounce
+    else:
+        OTPRecord.create_otp(
+            mobile_number=mobile_number,
+            purpose=OTPRecord.OTP_PURPOSE_LOAN_CREATION,
+            reference_id="new_loan", # No ID yet
+            email=email
+        )
+        OTPService.send_otp_to_customer(mobile_number)
 
-    return render(request, "gold_loan/loan/step5_otp.html")
+    return render(request, "gold_loan/loan/step5_otp.html", {
+        "mobile_masked": f"xxxxxx{mobile_number[-4:]}"
+    })
 
 def resend_otp_api(request):
-    """Mock API to resend OTP"""
-    if request.method == "POST":
-        # In a real app, you would regenerate and send the SMS here
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+    """
+    API to resend OTP based on context.
+    Supports:
+    1. Loan Creation (via session)
+    2. Loan Closure/Extension (via POST params)
+    """
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Invalid request method"}, status=400)
+        
+    purpose = request.POST.get("purpose")
+    loan_id = request.POST.get("loan_id")
+    
+    mobile_number = None
+    email = None
+    customer_name = "Customer"
+    otp_purpose = None
+    reference_id = None
+    purpose_text = "Verification"
+    
+    # SCENARIO 1: Explicit Loan ID (Closure/Extension)
+    if loan_id:
+        try:
+            loan = Loan.objects.get(id=loan_id)
+            mobile_number = loan.customer.mobile_primary
+            email = loan.customer.email
+            customer_name = loan.customer.name
+            reference_id = str(loan.id)
+            
+            if purpose == "close":
+                otp_purpose = OTPRecord.OTP_PURPOSE_LOAN_CLOSURE
+                purpose_text = "Loan Closure"
+            elif purpose == "extend":
+                otp_purpose = OTPRecord.OTP_PURPOSE_LOAN_EXTENSION
+                purpose_text = "Loan Extension"
+            else:
+                 return JsonResponse({"success": False, "error": "Invalid purpose provided"}, status=400)
+        except Loan.DoesNotExist:
+             return JsonResponse({"success": False, "error": "Loan not found"}, status=404)
+
+    # SCENARIO 2: Loan Entry Session (Step 5)
+    elif request.session.get("loan_entry"):
+        session = request.session["loan_entry"]
+        otp_purpose = OTPRecord.OTP_PURPOSE_LOAN_CREATION
+        purpose_text = "Loan Creation"
+        reference_id = "new_loan"
+        
+        # Resolve Customer
+        existing_id = session.get("existing_customer_id")
+        if existing_id:
+             try:
+                 c = Customer.objects.get(id=existing_id)
+                 mobile_number = c.mobile_primary
+                 email = c.email
+                 customer_name = c.name
+             except Customer.DoesNotExist:
+                 return JsonResponse({"success": False, "error": "Customer not found"}, status=404)
+        elif "customer" in session:
+             mobile_number = session["customer"].get("mobile_primary")
+             email = session["customer"].get("email")
+             customer_name = session["customer"].get("name", "Customer")
+    
+    if not mobile_number or not otp_purpose:
+        return JsonResponse({"success": False, "error": "Unable to determine context for OTP"}, status=400)
+        
+    # Rate Limit / Debounce (60 seconds)
+    last_otp = OTPRecord.get_latest_valid_otp(mobile_number, otp_purpose)
+    if last_otp and (timezone.now() - last_otp.created_at).total_seconds() < 60:
+         return JsonResponse({"success": False, "error": "Please wait 60 seconds before resending OTP"})
+         
+    # Send
+    new_otp = OTPRecord.create_otp(
+        mobile_number=mobile_number,
+        purpose=otp_purpose,
+        reference_id=reference_id,
+        email=email
+    )
+    
+    success, msg = OTPService.send_otp_to_customer(mobile_number)
+    
+    if success:
+        return JsonResponse({"success": True, "message": f"OTP sent via SMS"})
+    else:
+        # If sending failed, delete the OTP record so the user isn't blocked by the 60s debounce
+        new_otp.delete()
+        return JsonResponse({"success": False, "error": msg})
 
 
 # API Endpoints for customer search

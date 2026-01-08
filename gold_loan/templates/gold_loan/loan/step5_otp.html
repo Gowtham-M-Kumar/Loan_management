@@ -2,8 +2,9 @@
 {% load static %}
 
 {% block step_title %}Step 5 of 5: Identity Verification{% endblock %}
-{% block step_description %}Please enter the 6-digit OTP sent to the registered mobile number to finalize the
-application.{% endblock %}
+{% block step_description %}
+Please enter the 6-digit OTP sent to the Admin number to finalize the application.
+{% endblock %}
 
 {% block step_content %}
 {% with current_step=5 back_url="/loan/entry/step-4/" %}
@@ -34,38 +35,87 @@ application.{% endblock %}
 {% endblock %}
 
 {% block scripts %}
-<script>
-    const currentStep = 5;
+const currentStep = 5;
 
-    document.getElementById('resendOtp').addEventListener('click', function () {
-        const btn = this;
-        btn.disabled = true;
-        btn.innerText = 'Resending...';
+document.getElementById('resendOtp').addEventListener('click', function () {
+const btn = this;
+btn.disabled = true;
+btn.innerText = 'Resending...';
 
-        fetch("{% url 'gold_loan:resend_otp_api' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('OTP has been resent successfully.');
-                } else {
-                    alert('Error resending OTP: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerText = 'Resend OTP';
-            });
-    });
+fetch("{% url 'gold_loan:resend_otp_api' %}", {
+method: 'POST',
+headers: {
+'X-CSRFToken': '{{ csrf_token }}',
+'X-Requested-With': 'XMLHttpRequest'
+}
+})
+.then(response => response.json())
+.then(data => {
+if (data.success) {
+alert('OTP has been resent successfully.');
+} else {
+alert('Error resending OTP: ' + (data.error || 'Unknown error'));
+}
+})
+.catch(err => alert('Network error occurred.'))
+.finally(() => {
+btn.disabled = false;
+btn.innerText = 'Resend OTP';
+});
+});
 
-    // Cleanup sessionStorage upon successful form submission
-    document.getElementById('stepForm').addEventListener('submit', function () {
-        sessionStorage.removeItem("customer_photo_preview");
-        localStorage.setItem('toast_trigger', 'loan_success');
-    });
-</script>
+// Validates OTP via AJAX
+document.getElementById('stepForm').addEventListener('submit', function (e) {
+e.preventDefault();
+
+const form = this;
+const formData = new FormData(form);
+const submitBtn = document.querySelector('button[type="submit"]') || document.querySelector('.btn-next'); // Try to find
+submit button
+
+if(submitBtn) {
+submitBtn.disabled = true;
+submitBtn.innerText = 'Verifying...';
+}
+
+fetch(window.location.href, {
+method: 'POST',
+body: formData,
+headers: {
+'X-Requested-With': 'XMLHttpRequest'
+}
+})
+.then(response => response.json())
+.then(data => {
+if (data.success) {
+// Success - Redirect
+sessionStorage.removeItem("customer_photo_preview");
+localStorage.setItem('toast_trigger', 'loan_success');
+window.location.href = data.redirect_url;
+} else {
+// Error - Show inline
+const errorDiv = document.querySelector('.alert-error') || document.createElement('div');
+if (!document.querySelector('.alert-error')) {
+errorDiv.className = 'alert alert-error';
+errorDiv.style.marginBottom = '20px';
+form.parentElement.insertBefore(errorDiv, form);
+}
+errorDiv.innerText = data.error || 'Invalid OTP. Please try again.';
+errorDiv.style.display = 'block';
+
+if(submitBtn) {
+submitBtn.disabled = false;
+submitBtn.innerText = 'Next'; // Or whatever it was
+}
+}
+})
+.catch(err => {
+console.error(err);
+alert('An error occurred during verification.');
+if(submitBtn) {
+submitBtn.disabled = false;
+submitBtn.innerText = 'Next';
+}
+});
+});
 {% endblock %}
